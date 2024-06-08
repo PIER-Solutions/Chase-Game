@@ -22,7 +22,7 @@ fun HomeScreen(navController: NavController) {
         ) {
             Text(text = "Chase Game", style = MaterialTheme.typography.headlineLarge)
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { /* Navigate to the game screen or start the game */ }) {
+            Button(onClick = { navController.navigate("game") }) {
                 Text(text = "Play")
             }
         }
