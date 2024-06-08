@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.game.chase.presentation.ControlModule
 import com.game.chase.ui.theme.MyApplicationTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -23,8 +22,8 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        GameGrid(modifier = Modifier.weight(1f).fillMaxWidth(), gameState = gameState)
-        ControlModule(modifier = Modifier.fillMaxWidth().height(100.dp),
+        GameGrid(modifier = Modifier.weight(0.5f).fillMaxWidth(), gameState = gameState)
+        ControlModule(modifier = Modifier.weight(0.5f).fillMaxWidth().height(100.dp),
             onMove = { direction -> viewModel.movePlayer(direction) },
             onTeleport = { viewModel.teleportPlayer() },
             onBomb = { viewModel.useBomb() },

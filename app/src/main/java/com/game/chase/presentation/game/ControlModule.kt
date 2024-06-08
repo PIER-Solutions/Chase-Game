@@ -1,4 +1,4 @@
-package com.game.chase.presentation
+package com.game.chase.presentation.game
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +10,9 @@ import com.game.chase.core.constants.Direction
 
 @Composable
 fun ControlModule(modifier: Modifier = Modifier, onMove: (Direction) -> Unit, onTeleport: () -> Unit, onBomb: () -> Unit, onNewGame: () -> Unit) {
-    Column {
+    Column(
+        modifier = modifier
+    ) {
         Row {
             Button(onClick = { onMove(Direction.UP) }) { Text("Up") }
             Button(onClick = { onMove(Direction.DOWN) }) { Text("Down") }

@@ -24,7 +24,7 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier
     ) {
         gameState.observeAsState(initial = initialState).value.let { state ->
             for (y in 0 until 10) {
