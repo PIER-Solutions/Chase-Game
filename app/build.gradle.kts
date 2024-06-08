@@ -65,6 +65,8 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.navigation.compose)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -88,6 +90,7 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     kapt(libs.hilt.compiler.androidx)
+    implementation(libs.hilt.navigation.compose)
 
     // Room Database
     implementation(libs.room.runtime)

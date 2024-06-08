@@ -3,25 +3,27 @@ package com.game.chase
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.commit
-import com.game.chase.presentation.game.GameFragment
+import androidx.compose.runtime.Composable
+import com.game.chase.presentation.AppNavigationGraph
+import com.game.chase.ui.theme.MyApplicationTheme
+import dagger.hilt.android.AndroidEntryPoint
 
-class MainActivity : AppCompatActivity() {
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
-        if (savedInstanceState == null) {
-            supportFragmentManager.commit {
-                replace(android.R.id.content, GameFragment())
+        setContent {
+            MyApplicationTheme {
+                MyApp()
             }
         }
     }
 
-    private fun enableEdgeToEdge() {
-        // Your edge-to-edge implementation here
-    }
+}
+
+@Composable
+fun MyApp() {
+    AppNavigationGraph()
 }
