@@ -1,5 +1,6 @@
 package com.game.chase.presentation.game
 
+import GameGrid
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
@@ -15,7 +16,7 @@ import androidx.navigation.compose.rememberNavController
 @Composable
 fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, viewModel: GameViewModelInterface = hiltViewModel<GameViewModel>()) {
     // Assuming GameState is obtained from the ViewModel
-    val gameState = viewModel.gameState
+    val gameState = viewModel.gameState //TODO does this need .observeAsState()  ?
 
     Column(
         modifier = modifier.fillMaxSize(),
