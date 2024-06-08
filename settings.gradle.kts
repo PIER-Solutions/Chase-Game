@@ -11,9 +11,7 @@ pluginManagement {
         gradlePluginPortal()
     }
     plugins {
-//        id("com.google.dagger.hilt.android") version "2.51.1"
-
-//        id(libs.plugins.dagger.hilt.android.plugin.id) version libs.plugins.dagger.hilt.android.plugin.version.get()
+        id("com.google.dagger.hilt.android") version "2.51.1"
     }
 }
 dependencyResolutionManagement {
