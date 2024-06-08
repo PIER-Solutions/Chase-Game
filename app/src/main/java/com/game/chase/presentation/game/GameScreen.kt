@@ -16,33 +16,41 @@ import androidx.compose.ui.unit.dp
 import com.game.chase.presentation.ControlModule
 import com.game.chase.ui.theme.MyApplicationTheme
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.game.chase.data.GameRepository
+import com.game.chase.presentation.GameState
+import kotlinx.coroutines.flow.MutableStateFlow
 
-//@Composable
-//fun GameScreen(modifier: Modifier = Modifier, viewModel: GameViewModel = hiltViewModel()) {
-//    // Assuming GameState is obtained from the ViewModel
-//    val gameState = viewModel.gameState
-//
-//    Column(
-//        modifier = modifier.fillMaxSize(),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
+@Composable
+fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, viewModel: GameViewModelInterface = hiltViewModel<GameViewModel>()) {
+    // Assuming GameState is obtained from the ViewModel
+    val gameState = viewModel.gameState
+
+    Column(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 //        GameGrid(modifier = Modifier.weight(1f).fillMaxWidth(), gameState = gameState)
-//        ControlModule(modifier = Modifier.fillMaxWidth().height(100.dp),
-//            onMove = { direction -> viewModel.movePlayer(direction) },
-//            onTeleport = { viewModel.teleportPlayer() },
-//            onBomb = { viewModel.useBomb() },
-//            onNewGame = { viewModel.startNewGame() }
-//        )
-//    }
-//}
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun GameScreenPreview() {
-//    MyApplicationTheme {
-//        GameScreen(viewModel = GameViewModel())
-//    }
-//}
+        ControlModule(modifier = Modifier.fillMaxWidth().height(100.dp),
+            onMove = { direction -> viewModel.movePlayer(direction) },
+            onTeleport = { viewModel.teleportPlayer() },
+            onBomb = { viewModel.useBomb() },
+            onNewGame = { viewModel.startNewGame() }
+        )
+    }
+}
 
 
+
+@Preview(showBackground = true)
+@Composable
+fun GameScreenPreview() {
+    MyApplicationTheme {
+
+        val mockNavController = rememberNavController()
+
+        GameScreen(navController = mockNavController, viewModel = MockGameViewModel())
+    }
+}
