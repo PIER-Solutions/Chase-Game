@@ -113,20 +113,44 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
                 collisionSquares.add(playerPosition)
                 collisionSquares.add(enemy.position) // Add enemy's position to collisionSquares
                 enemies.removeAt(i) // Remove enemy from list
-            } else if (newPositions.count { it == enemy.position } > 1) {
-                // Collision detected with other enemies
-                collisionSquares.add(enemy.position)
-                enemies.removeAt(i) // Remove enemy from list
+                //TODO: reset level if there are still lives left
             } else if (collisionSquares.contains(enemy.position)) {
                 // Collision detected with existing collision square
-                collisionSquares.add(enemy.position)
+                if (!collisionSquares.contains(enemy.position)) { collisionSquares.add(enemy.position) }
+                enemies.removeAt(i) // Remove enemy from list
+            } else if (newPositions.count { it == enemy.position } > 1) {
+                // Collision detected with other enemies
+                if (!collisionSquares.contains(enemy.position)) { collisionSquares.add(enemy.position) }
                 enemies.removeAt(i) // Remove enemy from list
             }
         }
 
-        //TODO check for enemy count = 0 to start new level with more enemies
+        // Check if there are no enemies remaining and the player is not on a collision square
+        if (enemies.isEmpty() && !collisionSquares.contains(playerPosition)) {
+            // Trigger the next level
+            nextLevel()
+        }
+        else {
+            // Update the game state with the new enemies and collision squares
+//            updateGameState(enemies, collisionSquares)
+            _gameState.value = _gameState.value?.copy(enemies = enemies, collisionSquares = collisionSquares)
+        }
 
-        _gameState.value = _gameState.value?.copy(enemies = enemies, collisionSquares = collisionSquares)
+
+    }
+
+    private fun nextLevel() {
+        _gameState.value?.let {
+            val newLevel = it.level + 1
+            _gameState.value = GameState(
+//                player = it.player, // this setting will make the player start the new level at the same position
+                player = Player(Position(GRID_SIZE / 2, GRID_SIZE / 2)),
+                enemies = gameRepository.generateEnemies(newLevel, it.player.position).toMutableList(),
+                collisionSquares = listOf(),
+                score = it.score,
+                level = newLevel
+            )
+        }
     }
 
     override fun resetLevel() {
@@ -134,7 +158,7 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
             it.player.lives--
             if (it.player.lives > 0) {
                 _gameState.value = GameState(
-                    player = it.player,
+                    player = Player(Position(GRID_SIZE / 2, GRID_SIZE / 2)),
                     enemies = gameRepository.generateEnemies(it.level, it.player.position).toMutableList(),
                     collisionSquares = listOf(),
                     score = it.score,
