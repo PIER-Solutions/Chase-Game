@@ -48,8 +48,8 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
         }
         val newPlayer = oldPlayer.copy(position = newPosition)
         _gameState.value = _gameState.value?.copy(player = newPlayer)
-        moveEnemies()
-        detectCollisions()
+        val newPositions = moveEnemies()
+        detectCollisions(newPositions)
     }
 
     override fun teleportPlayer() {
@@ -59,8 +59,8 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
             val newPlayer = oldPlayer.copy(position = newPosition, teleportUses = oldPlayer.teleportUses - 1)
             _gameState.value = _gameState.value?.copy(player = newPlayer)
             // Additional logic for updating the game state
-            moveEnemies()
-            detectCollisions()
+            val newPositions = moveEnemies()
+            detectCollisions(newPositions)
         }
     }
 
@@ -70,16 +70,17 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
             // TODO: Logic for bomb effect - 1-block radius
             player.bombUses--
             // Additional logic for updating the game state
-            moveEnemies()
-            detectCollisions()
+            val newPositions = moveEnemies()
+            detectCollisions(newPositions)
         }
     }
 
-    private fun moveEnemies() {
-        // TODO fix enemy movements so they move differently. Something is off about how they move right now
-        val oldEnemies = _gameState.value?.enemies ?: return
-        val playerPosition = _gameState.value?.player?.position ?: return
-        val newEnemies = oldEnemies.map { enemy ->
+    private fun moveEnemies(): List<Position> {
+        val oldEnemies = _gameState.value?.enemies ?: return emptyList()
+        val playerPosition = _gameState.value?.player?.position ?: return emptyList()
+        val newEnemies = mutableListOf<Enemy>()
+
+        for (enemy in oldEnemies) {
             val dx = playerPosition.x - enemy.position.x
             val dy = playerPosition.y - enemy.position.y
             val newPosition = if (Math.abs(dx) > Math.abs(dy)) {
@@ -89,18 +90,22 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
                 // Move in y direction
                 Position(enemy.position.x, enemy.position.y + dy.sign)
             }
-            enemy.copy(position = newPosition)
+            newEnemies.add(enemy.copy(position = newPosition))
         }
-        _gameState.value = _gameState.value?.copy(enemies = newEnemies.toMutableList())
+
+        _gameState.value = _gameState.value?.copy(enemies = newEnemies)
+
+        return newEnemies.map { it.position }
     }
 
-    private fun detectCollisions() {
+    private fun detectCollisions(newPositions: List<Position>) {
         val playerPosition = _gameState.value?.player?.position ?: return
-        val enemies = _gameState.value?.enemies ?: return
+        val enemies = _gameState.value?.enemies?.toMutableList() ?: return
         val collisionSquares = _gameState.value?.collisionSquares?.toMutableList() ?: return
 
+        //TODO: add point system
+
         for (i in enemies.indices.reversed()) {
-            //TODO add scoring into this
             val enemy = enemies[i]
             if (enemy.position == playerPosition) {
                 // Collision detected with player
@@ -108,19 +113,20 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
                 collisionSquares.add(playerPosition)
                 collisionSquares.add(enemy.position) // Add enemy's position to collisionSquares
                 enemies.removeAt(i) // Remove enemy from list
-            }
-            if (enemies.any { it.position == enemy.position && it != enemy }) {
+            } else if (newPositions.count { it == enemy.position } > 1) {
                 // Collision detected with other enemies
                 collisionSquares.add(enemy.position)
                 enemies.removeAt(i) // Remove enemy from list
-            }
-            if (collisionSquares.contains(enemy.position)) {
+            } else if (collisionSquares.contains(enemy.position)) {
                 // Collision detected with existing collision square
                 collisionSquares.add(enemy.position)
                 enemies.removeAt(i) // Remove enemy from list
             }
-            _gameState.value = _gameState.value?.copy(enemies = enemies, collisionSquares = collisionSquares)
         }
+
+        //TODO check for enemy count = 0 to start new level with more enemies
+
+        _gameState.value = _gameState.value?.copy(enemies = enemies, collisionSquares = collisionSquares)
     }
 
     override fun resetLevel() {
