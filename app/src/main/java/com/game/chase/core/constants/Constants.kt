@@ -7,4 +7,6 @@ enum class HydratedEnumDemo(val value: String) {
     THIRD("Third")
 }
 
+const val GRID_SIZE = 19
+
 

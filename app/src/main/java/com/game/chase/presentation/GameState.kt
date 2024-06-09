@@ -6,7 +6,7 @@ import com.game.chase.data.Position
 
 data class GameState(
     val player: Player,
-    val enemies: List<Enemy>,
+    val enemies: MutableList<Enemy>,
     val collisionSquares: List<Position>,
     var score: Int = 0,
     var level: Int = 1

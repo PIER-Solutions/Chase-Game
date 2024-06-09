@@ -23,8 +23,8 @@ import androidx.lifecycle.MutableLiveData
 @Composable
 fun PreviewGameGrid() {
     val mockGameState = MutableLiveData(GameState(
-        player = Player(Position(0, 0)),
-        enemies = listOf(),
+        player = Player(Position(9, 9)),
+        enemies = mutableListOf(),
         collisionSquares = listOf()
     ))
     GameGrid(modifier = Modifier
@@ -36,13 +36,13 @@ fun PreviewGameGrid() {
 fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
     val initialState = GameState(
         player = Player(Position(0, 0)),
-        enemies = listOf(),
+        enemies = mutableListOf(),
         collisionSquares = listOf()
     )
 
     BoxWithConstraints(modifier = modifier.border(2.dp, Color.Black)) {
-        val numColumns = 10
-        val numRows = 10
+        val numColumns = 19
+        val numRows = 19
 
         // Assuming you want the grid to occupy as much space as possible
 //        val tileSizePx = min(
@@ -52,14 +52,14 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
 //        val tileSizeDp = with(LocalDensity.current) { tileSizePx.toDp() }
 
         val gridSize = maxWidth.value.coerceAtMost(maxHeight.value)
-        val cellSize = (gridSize / 10).dp
+        val cellSize = (gridSize / 19).dp
 
         Column {
 
             gameState.observeAsState(initial = initialState).value.let { state ->
-                for (y in 0 until 10) {
+                for (y in 0 until 19) {
                     Row {
-                        for (x in 0 until 10) {
+                        for (x in 0 until 19) {
                             val position = Position(x, y)
                             val isPlayer = state.player.position == position
                             val isEnemy = state.enemies.any { it.position == position }
@@ -86,7 +86,7 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
                                 } else if (isCollision) {
                                     Text("X", color = Color.Black)
                                 } else {
-                                    Text("${position.x},${position.y}")
+//                                    Text("${position.x},${position.y}")
                                 }
                             }
                         }
