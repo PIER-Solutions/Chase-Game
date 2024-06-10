@@ -1,32 +1,5 @@
 package com.game.chase.presentation.game
 
-//import androidx.compose.foundation.layout.Column
-//import androidx.compose.foundation.layout.Row
-//import androidx.compose.material3.Button
-//import androidx.compose.material3.Text
-//import androidx.compose.runtime.Composable
-//import androidx.compose.ui.Modifier
-//import com.game.chase.core.constants.Direction
-//
-//@Composable
-//fun ControlModule(modifier: Modifier = Modifier, onMove: (Direction) -> Unit, onTeleport: () -> Unit, onBomb: () -> Unit, onNewGame: () -> Unit) {
-//    Column(
-//        modifier = modifier
-//    ) {
-//        Row {
-//            Button(onClick = { onMove(Direction.UP) }) { Text("Up") }
-//            Button(onClick = { onMove(Direction.DOWN) }) { Text("Down") }
-//            Button(onClick = { onMove(Direction.LEFT) }) { Text("Left") }
-//            Button(onClick = { onMove(Direction.RIGHT) }) { Text("Right") }
-//        }
-//        Row {
-//            Button(onClick = onTeleport) { Text("Teleport") }
-//            Button(onClick = onBomb) { Text("Bomb") }
-//        }
-//        Button(onClick = onNewGame) { Text("New Game") }
-//    }
-//}
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -82,17 +55,50 @@ fun ControlModule(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Row 1: Display player lives, level, and score
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Text("Lives: ${state?.player?.lives ?: "?"}")
+            Text("Level: ${state?.level ?: "?"}")
+            Text("Score: ${state?.score ?: "?"}")
+        }
+
+        // Row 2: Teleport, Bomb, New Game, and Save buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(onClick = onTeleport) {
+                Text("Teleport (${state?.player?.teleportUses ?: "?"})")
+            }
+
+            Button(onClick = onBomb) {
+                Text("Bomb (${state?.player?.bombUses ?: "?"})")
+            }
+
+            Button(onClick = onNewGame) {
+                Text("New Game")
+            }
+        }
+
+        // Row 3: Directional controls
+        // Row 3: Directional controls
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .width(250.dp)
-                .height(250.dp)
+                .width(200.dp)
+                .height(200.dp)
                 .padding(all = 20.dp)
         ) {
+            // Placeholder in the center
+            val placeholderModifier = Modifier.align(Alignment.Center)
+
             // Top button with upward icon
             Button(
                 onClick = { onMove(Direction.UP) },
-                modifier = Modifier.align(Alignment.TopCenter)
+                modifier = placeholderModifier.offset(y = (-50).dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowUp,
@@ -103,7 +109,7 @@ fun ControlModule(
             // Bottom button with downward icon
             Button(
                 onClick = { onMove(Direction.DOWN) },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = placeholderModifier.offset(y = 50.dp)
             ) {
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
@@ -114,7 +120,7 @@ fun ControlModule(
             // Start (left) button with back icon
             Button(
                 onClick = { onMove(Direction.LEFT) },
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = placeholderModifier.offset(x = (-75).dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
@@ -125,36 +131,12 @@ fun ControlModule(
             // End (right) button with forward icon
             Button(
                 onClick = { onMove(Direction.RIGHT) },
-                modifier = Modifier.align(Alignment.CenterEnd)
+                modifier = placeholderModifier.offset(x = 75.dp)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "Move Right"
                 )
-            }
-
-            // Teleport button
-            Button(
-                onClick = onTeleport,
-                modifier = Modifier.align(Alignment.TopStart)
-            ) {
-                Text("Teleport (${state?.player?.teleportUses ?: "?"})")
-            }
-
-            // Bomb button
-            Button(
-                onClick = onBomb,
-                modifier = Modifier.align(Alignment.TopEnd)
-            ) {
-                Text("Bomb (${state?.player?.bombUses ?: "?"})")
-            }
-
-            // New Game button
-            Button(
-                onClick = onNewGame,
-                modifier = Modifier.align(Alignment.BottomStart)
-            ) {
-                Text("New Game")
             }
         }
     }
