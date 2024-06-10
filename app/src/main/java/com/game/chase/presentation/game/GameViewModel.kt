@@ -55,7 +55,7 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
     override fun teleportPlayer() {
         val oldPlayer = _gameState.value?.player ?: return
         if (oldPlayer.teleportUses > 0) {
-            val newPosition = Position(java.util.Random().nextInt(10), java.util.Random().nextInt(10))
+            val newPosition = Position(java.util.Random().nextInt(GRID_SIZE - 1), java.util.Random().nextInt(GRID_SIZE - 1))
             val newPlayer = oldPlayer.copy(position = newPosition, teleportUses = oldPlayer.teleportUses - 1)
             _gameState.value = _gameState.value?.copy(player = newPlayer)
             // Additional logic for updating the game state

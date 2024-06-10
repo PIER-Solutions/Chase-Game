@@ -9,5 +9,5 @@ data class GameState(
     val enemies: MutableList<Enemy>,
     val collisionSquares: List<Position>,
     var score: Int = 0,
-    var level: Int = 1
+    var level: Int = 1,
 )

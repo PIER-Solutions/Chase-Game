@@ -4,19 +4,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LiveData
 import com.game.chase.data.Player
 import com.game.chase.data.Position
 import com.game.chase.presentation.GameState
 
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
 @Preview(showBackground = true)
@@ -27,7 +25,8 @@ fun PreviewGameGrid() {
         enemies = mutableListOf(),
         collisionSquares = listOf()
     ))
-    GameGrid(modifier = Modifier
+    GameGrid(
+        modifier = Modifier
         .fillMaxSize()
         .background(Color.LightGray), gameState = mockGameState)
 }

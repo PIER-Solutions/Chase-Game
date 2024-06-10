@@ -37,11 +37,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.game.chase.core.constants.Direction
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.game.chase.data.Player
+import com.game.chase.data.Position
+import com.game.chase.presentation.GameState
 
 
 @Preview(showBackground = true)
@@ -51,7 +58,12 @@ fun PreviewControlModule() {
         onMove = { direction -> println("Move $direction") },
         onTeleport = { println("Teleport") },
         onBomb = { println("Bomb") },
-        onNewGame = { println("New Game") }
+        onNewGame = { println("New Game") },
+        gameState = MutableLiveData(GameState(
+            player = Player(Position(0, 0)),
+            enemies = mutableListOf(),
+            collisionSquares = listOf()
+        ))
     )
 }
 
@@ -61,8 +73,11 @@ fun ControlModule(
     onMove: (Direction) -> Unit,
     onTeleport: () -> Unit,
     onBomb: () -> Unit,
-    onNewGame: () -> Unit
+    onNewGame: () -> Unit,
+    gameState: LiveData<GameState>
 ) {
+    val state by gameState.observeAsState()
+
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -123,7 +138,7 @@ fun ControlModule(
                 onClick = onTeleport,
                 modifier = Modifier.align(Alignment.TopStart)
             ) {
-                Text("Teleport")
+                Text("Teleport (${state?.player?.teleportUses ?: "?"})")
             }
 
             // Bomb button
