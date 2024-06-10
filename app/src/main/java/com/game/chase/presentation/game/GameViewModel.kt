@@ -65,11 +65,25 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
     }
 
     override fun useBomb() {
-        val player = _gameState.value?.player ?: return
-        if (player.bombUses > 0) {
-            // TODO: Logic for bomb effect - 1-block radius
-            player.bombUses--
-            // Additional logic for updating the game state
+        val oldPlayer = _gameState.value?.player ?: return
+        if (oldPlayer.bombUses > 0) {
+            val newPlayer = oldPlayer.copy(bombUses = oldPlayer.bombUses - 1)
+            _gameState.value = _gameState.value?.copy(player = newPlayer)
+
+            val enemies = _gameState.value?.enemies?.toMutableList() ?: return
+            val collisionSquares = _gameState.value?.collisionSquares?.toMutableList() ?: return
+            val playerPosition = newPlayer.position
+
+            for (i in enemies.indices.reversed()) {
+                val enemy = enemies[i]
+                if (isWithinRadius(1, playerPosition, enemy.position, )) {
+                    collisionSquares.add(enemy.position)
+                    enemies.removeAt(i)
+                    //TODO: Calculate points
+                }
+            }
+
+            _gameState.value = _gameState.value?.copy(enemies = enemies, collisionSquares = collisionSquares)
             val newPositions = moveEnemies()
             detectCollisions(newPositions)
         }
@@ -144,8 +158,8 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
             val newLevel = it.level + 1
             _gameState.value = GameState(
 //                player = it.player, // this setting will make the player start the new level at the same position
-                player = Player(Position(GRID_SIZE / 2, GRID_SIZE / 2)),
-                enemies = gameRepository.generateEnemies(newLevel, it.player.position).toMutableList(),
+                player = it.player.copy(position = Position(GRID_SIZE / 2, GRID_SIZE / 2)),
+                enemies = generateEnemies(newLevel, it.player.position).toMutableList(),
                 collisionSquares = listOf(),
                 score = it.score,
                 level = newLevel
@@ -158,8 +172,8 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
             it.player.lives--
             if (it.player.lives > 0) {
                 _gameState.value = GameState(
-                    player = Player(Position(GRID_SIZE / 2, GRID_SIZE / 2)),
-                    enemies = gameRepository.generateEnemies(it.level, it.player.position).toMutableList(),
+                    player = it.player.copy(position = Position(GRID_SIZE / 2, GRID_SIZE / 2)),
+                    enemies = generateEnemies(it.level, it.player.position).toMutableList(),
                     collisionSquares = listOf(),
                     score = it.score,
                     level = it.level
@@ -173,11 +187,30 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
     override fun startNewGame() {
         _gameState.value = GameState(
             player = Player(Position(GRID_SIZE / 2, GRID_SIZE / 2)),
-            enemies = gameRepository.generateEnemies(1, Position(10, 10)).toMutableList(),
+            enemies = generateEnemies(1, Position(GRID_SIZE / 2, GRID_SIZE / 2)).toMutableList(),
             collisionSquares = listOf(),
             score = 0,
             level = 1
         )
+    }
+
+    private fun generateEnemies(level: Int, playerPosition: Position): List<Enemy> {
+        val enemies = mutableListOf<Enemy>()
+        val gridSize = GRID_SIZE
+        val random = java.util.Random()
+
+        repeat(level + 2) {
+            var position: Position
+            do {
+                position = Position(random.nextInt(gridSize), random.nextInt(gridSize))
+            } while (isWithinRadius(2, position, playerPosition)) // Ensure enemies are not too close to the player
+            enemies.add(Enemy(position))
+        }
+        return enemies
+    }
+
+    private fun isWithinRadius(radius: Int, pos1: Position, pos2: Position): Boolean {
+        return Math.abs(pos1.x - pos2.x) <= radius && Math.abs(pos1.y - pos2.y) <= radius
     }
 
     override fun saveScore(score: Int) {

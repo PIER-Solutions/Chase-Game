@@ -146,7 +146,7 @@ fun ControlModule(
                 onClick = onBomb,
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                Text("Bomb")
+                Text("Bomb (${state?.player?.bombUses ?: "?"})")
             }
 
             // New Game button
