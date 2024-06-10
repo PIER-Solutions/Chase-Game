@@ -13,7 +13,6 @@ import com.game.chase.data.Position
 import com.game.chase.data.Score
 import com.game.chase.presentation.GameState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.sign
@@ -30,7 +29,7 @@ interface GameViewModelInterface {
 
 @HiltViewModel
 class GameViewModel @Inject constructor(private val gameRepository: GameRepository) : ViewModel(), GameViewModelInterface {
-
+    var enemiesCanMoveDiagonally = true
 
     private val _gameState = MutableLiveData<GameState>()
     override val gameState: LiveData<GameState> = _gameState
@@ -97,12 +96,18 @@ class GameViewModel @Inject constructor(private val gameRepository: GameReposito
         for (enemy in oldEnemies) {
             val dx = playerPosition.x - enemy.position.x
             val dy = playerPosition.y - enemy.position.y
-            val newPosition = if (Math.abs(dx) > Math.abs(dy)) {
-                // Move in x direction
-                Position(enemy.position.x + dx.sign, enemy.position.y)
+            val newPosition = if (enemiesCanMoveDiagonally) {
+                // Allow diagonal movement
+                Position(enemy.position.x + dx.sign, enemy.position.y + dy.sign)
             } else {
-                // Move in y direction
-                Position(enemy.position.x, enemy.position.y + dy.sign)
+                // Only allow horizontal or vertical movement
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    // Move in x direction
+                    Position(enemy.position.x + dx.sign, enemy.position.y)
+                } else {
+                    // Move in y direction
+                    Position(enemy.position.x, enemy.position.y + dy.sign)
+                }
             }
             newEnemies.add(enemy.copy(position = newPosition))
         }
