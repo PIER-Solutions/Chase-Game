@@ -16,7 +16,6 @@ class GameInteractor @Inject constructor(
     private val gameRepository: GameRepository,
     private val positionGenerator: PositionGenerator)
      {
-    private var enemiesCanMoveDiagonally = true // move to a game setting if we decide to keep this as am option, otherwise remove it
 
     fun movePlayer(gameState: GameState, direction: Direction): GameState {
         val oldPlayer = gameState.player
@@ -85,19 +84,7 @@ class GameInteractor @Inject constructor(
         for (enemy in oldEnemies) {
             val dx = playerPosition.x - enemy.position.x
             val dy = playerPosition.y - enemy.position.y
-            val newPosition = if (enemiesCanMoveDiagonally) {
-                // Allow diagonal movement
-                Position(enemy.position.x + dx.sign, enemy.position.y + dy.sign)
-            } else {
-                // Only allow horizontal or vertical movement
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    // Move in x direction
-                    Position(enemy.position.x + dx.sign, enemy.position.y)
-                } else {
-                    // Move in y direction
-                    Position(enemy.position.x, enemy.position.y + dy.sign)
-                }
-            }
+            val newPosition = Position(enemy.position.x + dx.sign, enemy.position.y + dy.sign)
             newEnemies.add(enemy.copy(position = newPosition))
         }
 
@@ -177,7 +164,7 @@ class GameInteractor @Inject constructor(
         )
     }
 
-    private fun generateEnemies(level: Int, playerPosition: Position): List<Enemy> {
+    fun generateEnemies(level: Int, playerPosition: Position): List<Enemy> {
         val enemies = mutableListOf<Enemy>()
         val gridSize = GRID_SIZE
         val random = Random()
@@ -191,8 +178,7 @@ class GameInteractor @Inject constructor(
         }
         return enemies
     }
-
-    private fun isWithinRadius(radius: Int, pos1: Position, pos2: Position): Boolean {
+     fun isWithinRadius(radius: Int, pos1: Position, pos2: Position): Boolean {
         return Math.abs(pos1.x - pos2.x) <= radius && Math.abs(pos1.y - pos2.y) <= radius
     }
 }
