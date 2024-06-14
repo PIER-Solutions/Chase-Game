@@ -21,7 +21,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.game.chase.data.Player
 import com.game.chase.data.Position
-import com.game.chase.presentation.GameState
+import com.game.chase.domain.game.GameState
 
 
 @Preview(showBackground = true)
@@ -32,11 +32,13 @@ fun PreviewControlModule() {
         onTeleport = { println("Teleport") },
         onBomb = { println("Bomb") },
         onNewGame = { println("New Game") },
-        gameState = MutableLiveData(GameState(
+        gameState = MutableLiveData(
+            GameState(
             player = Player(Position(0, 0)),
             enemies = mutableListOf(),
-            collisionSquares = listOf()
-        ))
+            collisionSquares = mutableListOf()
+        )
+        )
     )
 }
 

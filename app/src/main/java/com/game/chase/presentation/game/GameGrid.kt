@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.game.chase.data.Player
 import com.game.chase.data.Position
-import com.game.chase.presentation.GameState
+import com.game.chase.domain.game.GameState
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.LiveData
@@ -20,11 +20,13 @@ import androidx.lifecycle.MutableLiveData
 @Preview(showBackground = true)
 @Composable
 fun PreviewGameGrid() {
-    val mockGameState = MutableLiveData(GameState(
+    val mockGameState = MutableLiveData(
+        GameState(
         player = Player(Position(9, 9)),
         enemies = mutableListOf(),
-        collisionSquares = listOf()
-    ))
+        collisionSquares = mutableListOf()
+    )
+    )
     GameGrid(
         modifier = Modifier
         .fillMaxSize()
@@ -36,7 +38,7 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
     val initialState = GameState(
         player = Player(Position(0, 0)),
         enemies = mutableListOf(),
-        collisionSquares = listOf()
+        collisionSquares = mutableListOf()
     )
 
     BoxWithConstraints(modifier = modifier.border(2.dp, Color.Black)) {
