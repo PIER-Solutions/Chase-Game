@@ -12,7 +12,7 @@ import kotlin.math.sign
 
 
 class GameInteractor @Inject constructor(private val gameRepository: GameRepository) {
-    var enemiesCanMoveDiagonally = true
+    private var enemiesCanMoveDiagonally = true // move to a game setting if we decide to keep this as am option, otherwise remove it
 
     fun movePlayer(gameState: GameState, direction: Direction): GameState {
         val oldPlayer = gameState.player
@@ -22,8 +22,17 @@ class GameInteractor @Inject constructor(private val gameRepository: GameReposit
             Direction.LEFT -> Position((oldPlayer.position.x - 1).coerceAtLeast(0), oldPlayer.position.y)
             Direction.RIGHT -> Position((oldPlayer.position.x + 1).coerceAtMost(GRID_SIZE - 1), oldPlayer.position.y)
         }
-        val newPlayer = oldPlayer.copy(position = newPosition)
-        return updateEnemies(gameState.copy(player = newPlayer))
+
+        if (gameState.collisionSquares.contains(newPosition)) {
+            // Add error response message
+            return gameState
+        } else if (newPosition.x < 0 || newPosition.x >= GRID_SIZE || newPosition.y < 0 || newPosition.y >= GRID_SIZE) {
+            // Add error response message
+            return gameState
+        } else {
+            val newPlayer = oldPlayer.copy(position = newPosition)
+            return updateEnemies(gameState.copy(player = newPlayer))
+        }
     }
 
     fun teleportPlayer(gameState: GameState): GameState {
@@ -120,8 +129,8 @@ class GameInteractor @Inject constructor(private val gameRepository: GameReposit
     fun handlePlayerCollision(gameState: GameState): GameState {
         val oldPlayer = gameState.player
         oldPlayer.lives--
-        if (oldPlayer.lives > 0) {
-            return GameState(
+        return if (oldPlayer.lives > 0) {
+            GameState(
                 player = oldPlayer.copy(position = Position(GRID_SIZE / 2, GRID_SIZE / 2)),
                 enemies = generateEnemies(gameState.level, oldPlayer.position).toMutableList(),
                 collisionSquares = mutableListOf(),
@@ -129,7 +138,7 @@ class GameInteractor @Inject constructor(private val gameRepository: GameReposit
                 level = gameState.level
             )
         } else {
-            return startNewGame()
+            startNewGame()
         }
     }
 
