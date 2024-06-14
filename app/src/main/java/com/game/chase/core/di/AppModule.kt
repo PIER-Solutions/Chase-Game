@@ -6,6 +6,8 @@ import androidx.room.Room
 import com.game.chase.data.GameDatabase
 import com.game.chase.data.GameRepository
 import com.game.chase.data.ScoreDao
+import com.game.chase.domain.game.util.PositionGenerator
+import com.game.chase.domain.game.util.impl.RandomPositionGenerator
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,4 +37,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideGameRepository(scoreDao: ScoreDao): GameRepository = GameRepository(scoreDao)
+
+    @Provides
+    @Singleton
+    fun providePositionGenerator(): PositionGenerator {
+        return RandomPositionGenerator()
+    }
 }

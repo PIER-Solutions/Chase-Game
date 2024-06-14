@@ -6,12 +6,16 @@ import com.game.chase.data.GameRepository
 import com.game.chase.data.Player
 import com.game.chase.data.Position
 import com.game.chase.data.Enemy
+import com.game.chase.domain.game.util.PositionGenerator
 import java.util.Random
 import javax.inject.Inject
 import kotlin.math.sign
 
 
-class GameInteractor @Inject constructor(private val gameRepository: GameRepository) {
+class GameInteractor @Inject constructor(
+    private val gameRepository: GameRepository,
+    private val positionGenerator: PositionGenerator)
+     {
     private var enemiesCanMoveDiagonally = true // move to a game setting if we decide to keep this as am option, otherwise remove it
 
     fun movePlayer(gameState: GameState, direction: Direction): GameState {
@@ -38,11 +42,21 @@ class GameInteractor @Inject constructor(private val gameRepository: GameReposit
     fun teleportPlayer(gameState: GameState): GameState {
         val oldPlayer = gameState.player
         if (oldPlayer.teleportUses > 0) {
-            val newPosition = Position(Random().nextInt(GRID_SIZE - 1), Random().nextInt(GRID_SIZE - 1))
+            var newPosition: Position
+            do {
+                // TBD - may need to add an alternate algorithm to find a new position once there are too many occupied squares (or switch to tracking game state via each square knowing its state
+                newPosition = positionGenerator.getRandomPosition()
+            } while (isPositionOccupied(newPosition, gameState)) //TODO: needs to try to find a new position until an acceptable one is found
             val newPlayer = oldPlayer.copy(position = newPosition, teleportUses = oldPlayer.teleportUses - 1)
             return updateEnemies(gameState.copy(player = newPlayer))
         }
         return gameState
+    }
+
+    private fun isPositionOccupied(position: Position, gameState: GameState): Boolean {
+        return gameState.player.position == position ||
+                gameState.enemies.any { it.position == position } ||
+                gameState.collisionSquares.contains(position)
     }
 
     fun useBomb(gameState: GameState): GameState {
