@@ -12,7 +12,9 @@ import com.game.chase.domain.game.util.PositionGenerator
 import com.game.chase.domain.game.util.impl.SpecificPositionGenerator
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
@@ -333,23 +335,187 @@ class GameInteractorTest {
 
         assertNotEquals(initialGameState.player.position, resultGameState.player.position)
     }
+    @Test
+    fun testTeleportPlayer_TeleportsRemainingGetsDecremented() = runTest {
+        val initialTeleportUses = 2
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  teleportUses = initialTeleportUses),
+            enemies = mutableListOf(Enemy(Position(0, 0))),
+            collisionSquares = mutableListOf()
+        )
 
+        //Act
+        val resultGameState = gameInteractor.teleportPlayer(initialGameState)
+
+        assertEquals(initialTeleportUses - 1, resultGameState.player.teleportUses)
+    }
     // endregion
 
     //region useBomb Tests
-        /*
-        PlayerDoesNotUseBombIfNoBombsRemain
-            - assert that player position, enemies, and collision squares remain the same
-        BombReplacesAllEnemiesWithinRadiusWithCollisionSquares
-            - all enemies within radius are removed from enemies list
-            - each of those positions is now a collision square
-            - enemy positions didn't change? (requires mocking the response from updateEnemies)
-        BombDoesNotRemoveEnemiesOutsideRadius
-        BombDoesNotRemovePlayer
-        BombDoesNotRemoveCollisionSquares
-        UpdateEnemiesIsCalledAfterBomb
-        PlayerPositionDoesNotChangeAfterBomb
-         */
+    @Test
+    fun testUseBomb_DoesNotChangeStateIfNoBombsRemain() = runTest {
+        val initialEnemyPosition1 = Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y)
+        val initialEnemyPosition2 = Position(defaultPlayerPosition.x - 1, defaultPlayerPosition.y -1)
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 0),
+            enemies = mutableListOf(
+                Enemy(initialEnemyPosition1),
+                Enemy(initialEnemyPosition2),
+                Enemy(Position(0, 0))
+            ),
+            collisionSquares = mutableListOf()
+        )
+
+        //Act
+        val resultGameState = gameInteractor.useBomb(initialGameState)
+
+        assertEquals(initialGameState, resultGameState)
+    }
+
+    @Test
+    fun testUseBomb_BombsRemainingGetsDecremented() = runTest {
+        val initialBombUses = 2
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = initialBombUses),
+            enemies = mutableListOf(Enemy(Position(0, 0))),
+            collisionSquares = mutableListOf()
+        )
+
+        //Act
+        val resultGameState = gameInteractor.useBomb(initialGameState)
+
+        assertEquals(initialBombUses - 1, resultGameState.player.bombUses)
+    }
+
+    @Test
+    fun testUseBomb_ReplacesAllEnemiesWithinRangeWithCollisionSquares() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy2 = Enemy(Position(defaultPlayerPosition.x - 1, defaultPlayerPosition.y -1))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 2),
+            enemies = mutableListOf(
+                enemy1,
+                enemy2,
+                Enemy(Position(0, 0))
+            ),
+            collisionSquares = mutableListOf()
+        )
+
+        //Act
+        val resultGameState = gameInteractor.useBomb(initialGameState)
+
+        // each of the enemy positions within range is now a collision square
+        assertTrue(resultGameState.collisionSquares.containsAll(listOf(enemy1.position, enemy2.position)))
+
+        // all enemies within radius are removed from enemies list
+        assertTrue(resultGameState.enemies.size == 1)
+        assertFalse(resultGameState.enemies.contains(enemy1))
+        assertFalse(resultGameState.enemies.contains(enemy2))
+    }
+
+    @Test
+    fun testUseBomb_BombDoesNotRemoveEnemiesOutsideRadius() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy2 = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 2),
+            enemies = mutableListOf(
+                enemy1,
+                enemy2
+            ),
+            collisionSquares = mutableListOf()
+        )
+
+        //Act
+        val resultGameState = gameInteractor.useBomb(initialGameState)
+
+        // all enemies outside the radius remain in enemies list
+        assertTrue(resultGameState.enemies.size == 1)
+        assertFalse(resultGameState.enemies.contains(enemy1))
+    }
+
+    @Test
+    fun testUseBomb_BombDoesNotRemovePlayerOrChangePlayerPosition() = runTest {
+        val enemy1 = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 2),
+            enemies = mutableListOf(
+                enemy1
+            ),
+            collisionSquares = mutableListOf()
+        )
+
+        //Act
+        val resultGameState = gameInteractor.useBomb(initialGameState)
+
+        assertTrue(resultGameState.enemies.size == 1)
+        assertEquals(initialGameState.player.position, resultGameState.player.position)
+    }
+
+    @Test
+    fun testUseBomb_BombDoesNotRemoveCollisionSquares() = runTest {
+        val enemy1 = Enemy(Position(0, 0))
+        val collisionSquare1 = Position(4, 1)
+        val collisionSquare2 = Position(1, 12)
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 2),
+            enemies = mutableListOf(
+                enemy1
+            ),
+            collisionSquares = mutableListOf(
+                collisionSquare1,
+                collisionSquare2
+            )
+        )
+
+        //Act
+        val resultGameState = gameInteractor.useBomb(initialGameState)
+
+        assertTrue(resultGameState.enemies.size == 1)
+        assertEquals(initialGameState.player.position, resultGameState.player.position)
+        assertTrue(resultGameState.collisionSquares.containsAll(initialGameState.collisionSquares))
+    }
+
+    @Test
+    fun testUseBomb_CallsUpdateEnemiesWhenFinished() = runTest {
+        val enemy1 = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 2),
+            enemies = mutableListOf(
+                enemy1
+            ),
+            collisionSquares = mutableListOf()
+        )
+        val spyInteractor = spy(gameInteractor)
+
+        //Act
+        spyInteractor.useBomb(initialGameState)
+
+        //Assert
+        verify(spyInteractor).updateEnemies(any())
+    }
+
+    @Test
+    fun testUseBomb_NextLevelIsCalledIfNoEnemiesRemain() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 2),
+            enemies = mutableListOf(enemy1),
+            collisionSquares = mutableListOf()
+        )
+        val spyInteractor = spy(gameInteractor)
+
+        //Act
+        spyInteractor.useBomb(initialGameState)
+
+        //Assert
+        verify(spyInteractor).nextLevel(any())
+    }
+
+    /* TODO: Add tests for:
+        bombs remaining gets decremented
+
+     */
 
     //endregion
     //region updateEnemies Tests
