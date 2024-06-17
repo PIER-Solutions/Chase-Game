@@ -1,6 +1,6 @@
 
 ### Background
-The game is inspired by the classic "Daleks" game. The objective is to destroy Daleks by making them collide with each other or using bombs. Daleks move towards the player every turn, and the player can move, teleport, or use bombs to avoid and destroy Daleks.
+The game is inspired by the classic "Daleks" game. The objective is to destroy Enemies by making them collide with each other or using bombs. Daleks move towards the player every turn, and the player can move, teleport, or use bombs to avoid and destroy Daleks.
 
 ### Requirements
 
@@ -12,7 +12,7 @@ The game is inspired by the classic "Daleks" game. The objective is to destroy D
 
 - **Player and Enemy Mechanics:**
   - Player can move up, down, left, or right.
-  - Enemies move one square closer to the player after each move.
+  - Enemies move one square closer to the player after each move (including diagonal).
   - Collisions between enemies turn them into collision squares.
 
 - **Level and Score Management:**
@@ -39,11 +39,11 @@ The game is inspired by the classic "Daleks" game. The objective is to destroy D
 ### Scoring
 - Start with 3 enemies at level 1.
 - Score:
-  - 1 point for every Dalek that runs into a pile or shielded player.
-  - 1 point for every Dalek that is bombed.
-  - 3 points for two Daleks colliding and creating a pile.
-  - 5 points for three Daleks colliding and creating a pile.
-  - Additional points for completing each level.
+  + 1 point for every Enemy that runs into a pile or shielded player.
+  + 1 point for every Enemy that is bombed.
+  + 3 points for two Enemies colliding and creating a pile.
+  + 5 points for three Enemies colliding and creating a pile.
+  + Additional points for completing each level.
 
 ### Additional Features
 - Button for starting a new game.
@@ -71,4 +71,5 @@ Hilt for providing dependencies.
 -----
 
 https://furfighters.fandom.com/wiki/Bear_Attack
+
 https://www.isaacsukin.com/sites/daleks/index.html
