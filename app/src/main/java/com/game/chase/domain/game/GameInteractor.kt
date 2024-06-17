@@ -20,10 +20,10 @@ class GameInteractor @Inject constructor(
     fun movePlayer(gameState: GameState, direction: Direction): GameState {
         val oldPlayer = gameState.player
         val newPosition = when (direction) {
-            Direction.UP -> Position(oldPlayer.position.x, (oldPlayer.position.y - 1).coerceAtLeast(0))
-            Direction.DOWN -> Position(oldPlayer.position.x, (oldPlayer.position.y + 1).coerceAtMost(GRID_SIZE - 1))
-            Direction.LEFT -> Position((oldPlayer.position.x - 1).coerceAtLeast(0), oldPlayer.position.y)
-            Direction.RIGHT -> Position((oldPlayer.position.x + 1).coerceAtMost(GRID_SIZE - 1), oldPlayer.position.y)
+            Direction.UP -> Position(oldPlayer.position.x, (oldPlayer.position.y - 1))
+            Direction.DOWN -> Position(oldPlayer.position.x, (oldPlayer.position.y + 1))
+            Direction.LEFT -> Position((oldPlayer.position.x - 1), oldPlayer.position.y)
+            Direction.RIGHT -> Position((oldPlayer.position.x + 1), oldPlayer.position.y)
         }
 
         if (gameState.collisionSquares.contains(newPosition)) {
