@@ -63,15 +63,16 @@ class GameInteractor @Inject constructor(
         if (oldPlayer.bombUses > 0) {
             gameState.player.bombUses--
 
+            var updatedScore = gameState.score
             for (i in gameState.enemies.indices.reversed()) {
                 val enemy = gameState.enemies[i]
                 if (isWithinRadius(1, gameState.player.position, enemy.position, )) {
                     gameState.collisionSquares.add(enemy.position)
                     gameState.enemies.removeAt(i)
-                    //TODO: Calculate points
+                    updatedScore++
                 }
             }
-            return updateEnemies(gameState)
+            return updateEnemies(gameState.copy(score = updatedScore))
         }
         return gameState
     }
@@ -91,40 +92,52 @@ class GameInteractor @Inject constructor(
         return detectCollisions(gameState.copy(enemies = newEnemies))
     }
 
-    fun detectCollisions(gameState: GameState): GameState {
-        val playerPosition = gameState.player.position
-        val enemies = gameState.enemies.toMutableList()
-        val collisionSquares = gameState.collisionSquares.toMutableList()
+     fun detectCollisions(gameState: GameState): GameState {
+         val playerPosition = gameState.player.position
+         val enemies = gameState.enemies.toMutableList()
+         val collisionSquares = gameState.collisionSquares.toMutableList()
+         var score = gameState.score
+         val scoredEnemies = mutableSetOf<Enemy>() // Set to keep track of scored enemies
 
-        for (i in enemies.indices.reversed()) {
-            val enemy = enemies[i]
-            if (enemy.position == playerPosition) {
-                // Collision detected with player
-                collisionSquares.add(enemy.position) // Add enemy's position to collisionSquares
-                enemies.removeAt(i) // Remove enemy from list TODO: Not sure we need this
-            } else if (collisionSquares.contains(enemy.position)) {
-                // Collision detected with existing collision square
-                if (!collisionSquares.contains(enemy.position)) { collisionSquares.add(enemy.position) }
-                enemies.removeAt(i) // Remove enemy from list
-            } else if (gameState.enemies.count { it.position == enemy.position } > 1) {
-                // Collision detected with other enemies
-                if (!collisionSquares.contains(enemy.position)) { collisionSquares.add(enemy.position) }
-                enemies.removeAt(i) // Remove enemy from list
-            }
-        }
+         for (i in enemies.indices.reversed()) {
+             val enemy = enemies[i]
+             if (enemy.position == playerPosition) {
+                 // Collision detected with player
+                 collisionSquares.add(enemy.position) // Add enemy's position to collisionSquares
+                 scoredEnemies.add(enemy) // Add enemy to scoredEnemies set
+                 enemies.removeAt(i) // Remove enemy from list
+             } else if (collisionSquares.contains(enemy.position)) {
+                 // Collision detected with existing collision square
+                 if (!collisionSquares.contains(enemy.position)) { collisionSquares.add(enemy.position) }
+                 if (!scoredEnemies.contains(enemy)) {
+                     score += 1 // Add 1 point for every Enemy that collides with collision square
+                     scoredEnemies.add(enemy) // Add enemy to scoredEnemies set
+                 }
+                 enemies.removeAt(i) // Remove enemy from list
+             } else if (gameState.enemies.count { it.position == enemy.position } > 1) {
+                 // Collision detected with other enemies
+                 if (!collisionSquares.contains(enemy.position)) { collisionSquares.add(enemy.position) }
+                 enemies.removeAt(i) // Remove enemy from list
+                 val pileSize = gameState.enemies.count { it.position == enemy.position }
+                 score += when (pileSize) {
+                     2 -> 3 // Add 3 points for two Enemies colliding and creating a pile
+                     3 -> 5 // Add 5 points for three Enemies colliding and creating a pile
+                     else -> 0
+                 }
+                 scoredEnemies.add(enemy) // Add enemy to scoredEnemies set
+             }
+         }
 
-        // Check if there are no enemies remaining and the player is not on a collision square
-        return if (collisionSquares.contains(playerPosition)) {
-            // Trigger the next level
-            handlePlayerCollision(gameState)
-        } else if (enemies.isEmpty() && !collisionSquares.contains(playerPosition)) {
-            // Trigger the next level
-            nextLevel(gameState)
-        } else {
-            // Update the game state with the new enemies and collision squares
-            gameState.copy(enemies = enemies, collisionSquares = collisionSquares)
-        }
-    }
+         // Check if there are no enemies remaining and the player is not on a collision square
+         return if (collisionSquares.contains(playerPosition)) {
+             handlePlayerCollision(gameState.copy(score = score))
+         } else if (enemies.isEmpty() && !collisionSquares.contains(playerPosition)) {
+             nextLevel(gameState.copy(score = score))
+         } else {
+             // Update the game state with the new enemies and collision squares
+             gameState.copy(enemies = enemies, collisionSquares = collisionSquares, score = score)
+         }
+     }
 
 
     fun handlePlayerCollision(gameState: GameState): GameState {
@@ -139,17 +152,19 @@ class GameInteractor @Inject constructor(
                 level = gameState.level
             )
         } else {
+            //TODO - [Scoring]: Save score if it is a new high score
             startNewGame()
         }
     }
 
     fun nextLevel(gameState: GameState): GameState {
         val newLevel = gameState.level + 1
+        val newScore = gameState.score + (3 * gameState.level)
         return GameState(
             player = gameState.player.copy(position = Position(GRID_SIZE / 2, GRID_SIZE / 2)),
             enemies = generateEnemies(newLevel, gameState.player.position).toMutableList(),
             collisionSquares = mutableListOf(),
-            score = gameState.score,
+            score = newScore,
             level = newLevel
         )
     }

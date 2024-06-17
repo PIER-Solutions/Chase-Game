@@ -19,10 +19,10 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
+import org.mockito.kotlin.check
 
 class GameInteractorTest {
     /*
@@ -503,6 +503,29 @@ class GameInteractorTest {
         verify(spyInteractor).nextLevel(any())
     }
 
+    @Test
+    fun testUseBomb_AddsScoreForEnemyBombed() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 2),
+            enemies = mutableListOf(enemy1),
+            collisionSquares = mutableListOf(),
+            score = 0
+        )
+
+        // Create a spy of gameInteractor
+        val spyInteractor = spy(gameInteractor)
+
+        // Act
+        spyInteractor.useBomb(initialGameState)
+
+        // Assert
+        // Verify that updateEnemies was called with a GameState where score = 1
+        verify(spyInteractor).updateEnemies(check<GameState> { gameState ->
+            assertEquals(1, gameState.score) // This works even though a new level is started form lack of enemies
+        })
+    }
+
     //endregion
 
     //region updateEnemies Tests
@@ -685,6 +708,73 @@ class GameInteractorTest {
         verify(spyInteractor).nextLevel(any())
     }
 
+    @Test
+    fun testDetectCollisions_AddsScoreForEnemyRunningIntoCollisionSquare() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val survivingEnemy = Enemy(Position(0, 0)) // Keeps level from completing; simpler than spying everything
+        val collisionSquare = Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y)
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition),
+            enemies = mutableListOf(enemy1, survivingEnemy),
+            collisionSquares = mutableListOf(collisionSquare),
+            score = 0
+        )
+
+        val updatedGameState = gameInteractor.detectCollisions(initialGameState)
+
+        assertEquals(1, updatedGameState.score)
+    }
+
+    @Test
+    fun testDetectCollisions_AddsScoreForTwoEnemiesColliding() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy2 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val survivingEnemy = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition),
+            enemies = mutableListOf(enemy1, enemy2, survivingEnemy),
+            collisionSquares = mutableListOf()
+        )
+
+        val updatedGameState = gameInteractor.detectCollisions(initialGameState)
+
+        assertEquals(3, updatedGameState.score)
+    }
+
+    @Test
+    fun testDetectCollisions_AddsScoreForThreeEnemiesColliding() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy2 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy3 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val survivingEnemy = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition),
+            enemies = mutableListOf(enemy1, enemy2, enemy3, survivingEnemy),
+            collisionSquares = mutableListOf()
+        )
+
+        val updatedGameState = gameInteractor.detectCollisions(initialGameState)
+
+        assertEquals(5, updatedGameState.score)
+    }
+
+    @Test
+    fun testDetectCollisions_AddsScoreForOtherEnemiesCollidingWhenPlayerIsCollided() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy2 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy3 = Enemy(Position(defaultPlayerPosition.x, defaultPlayerPosition.y))
+        val survivingEnemy = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition),
+            enemies = mutableListOf(enemy1, enemy2, enemy3, survivingEnemy),
+            collisionSquares = mutableListOf()
+        )
+
+        val updatedGameState = gameInteractor.detectCollisions(initialGameState)
+
+        assertEquals(3, updatedGameState.score)
+    }
+
     //endregion
 
     //region handlePlayerCollision Tests
@@ -845,17 +935,25 @@ class GameInteractorTest {
 
     @Test
     fun testNextLevel_KeepsScore() = runTest {
+        val initialScore = 100
+        val initialLevel = 1
         val initialGameState = GameState(
             player = Player(defaultPlayerPosition),
             enemies = defaultEnemyList,
             collisionSquares = mutableListOf(),
-            score = 100
+            score = initialScore,
+            level = initialLevel
         )
 
         val resultGameState = gameInteractor.nextLevel(initialGameState)
 
-        assertEquals(100, resultGameState.score)
+        val expectedScore = initialScore + (initialLevel * 3)
+        assertEquals(expectedScore, resultGameState.score)
     }
+
+
+
+
     //endregion
 
     //region startNewGame Tests
