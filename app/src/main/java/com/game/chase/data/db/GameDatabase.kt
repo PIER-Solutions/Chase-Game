@@ -1,9 +1,10 @@
-package com.game.chase.data
+package com.game.chase.data.db
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.game.chase.data.entity.Score
 
 @Database(entities = [Score::class], version = 1)
 abstract class GameDatabase : RoomDatabase() {

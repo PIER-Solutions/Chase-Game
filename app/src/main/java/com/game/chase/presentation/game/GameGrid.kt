@@ -9,8 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.game.chase.data.Player
-import com.game.chase.data.Position
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameState
 
 import androidx.compose.ui.tooling.preview.Preview

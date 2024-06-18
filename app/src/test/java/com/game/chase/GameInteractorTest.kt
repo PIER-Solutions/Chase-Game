@@ -2,10 +2,10 @@ package com.game.chase
 
 import com.game.chase.core.constants.Direction
 import com.game.chase.core.constants.GRID_SIZE
-import com.game.chase.data.Enemy
-import com.game.chase.data.GameRepository
-import com.game.chase.data.Player
-import com.game.chase.data.Position
+import com.game.chase.data.entity.Enemy
+import com.game.chase.data.db.GameRepository
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameInteractor
 import com.game.chase.domain.game.GameState
 import com.game.chase.domain.game.util.PositionGenerator

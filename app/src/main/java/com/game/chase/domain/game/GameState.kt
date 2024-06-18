@@ -1,8 +1,8 @@
 package com.game.chase.domain.game
 
-import com.game.chase.data.Enemy
-import com.game.chase.data.Player
-import com.game.chase.data.Position
+import com.game.chase.data.entity.Enemy
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
 
 data class GameState(
     val player: Player,

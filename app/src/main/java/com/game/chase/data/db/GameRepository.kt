@@ -1,7 +1,7 @@
-package com.game.chase.data
+package com.game.chase.data.db
 
 import androidx.lifecycle.LiveData
-import java.util.Random
+import com.game.chase.data.entity.Score
 import javax.inject.Inject
 import javax.inject.Singleton
 

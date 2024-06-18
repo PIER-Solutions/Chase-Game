@@ -19,8 +19,8 @@ import com.game.chase.core.constants.Direction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.game.chase.data.Player
-import com.game.chase.data.Position
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameState
 
 

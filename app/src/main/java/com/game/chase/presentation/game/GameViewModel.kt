@@ -5,10 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.chase.core.constants.Direction
-import com.game.chase.data.GameRepository
-import com.game.chase.data.Player
-import com.game.chase.data.Position
-import com.game.chase.data.Score
+import com.game.chase.data.db.GameRepository
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
+import com.game.chase.data.entity.Score
 import com.game.chase.domain.game.GameState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

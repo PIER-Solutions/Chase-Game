@@ -1,7 +1,7 @@
 package com.game.chase.domain.game.util.impl
 
 import com.game.chase.core.constants.GRID_SIZE
-import com.game.chase.data.Position
+import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.util.PositionGenerator
 import java.util.Random
 
