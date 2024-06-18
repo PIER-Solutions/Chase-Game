@@ -17,12 +17,14 @@ import com.game.chase.domain.game.GameInteractor
 
 interface GameViewModelInterface {
     val gameState: LiveData<GameState>
+    val topScores: LiveData<List<Score>>
     fun movePlayer(direction: Direction)
     fun teleportPlayer()
     fun useBomb()
     fun resetLevel()
     fun startNewGame()
     fun saveScore(score: Int)
+    fun fetchTopScores()
 }
 
 @HiltViewModel
@@ -33,6 +35,7 @@ class GameViewModel @Inject constructor(
 
     private val _gameState = MutableLiveData<GameState>()
     override val gameState: LiveData<GameState> = _gameState
+    override val topScores: LiveData<List<Score>> = MutableLiveData()
 
     init {
         startNewGame()
@@ -75,6 +78,12 @@ class GameViewModel @Inject constructor(
             gameRepository.insertScore(Score(points = score))
         }
     }
+
+    override fun fetchTopScores() {
+        viewModelScope.launch {
+            (topScores as MutableLiveData).value = gameRepository.getTopScores(10)
+        }
+    }
 }
 
 
@@ -86,6 +95,8 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
             collisionSquares = mutableListOf()
         )
     )
+    override val topScores: LiveData<List<Score>>
+        get() = MutableLiveData()
 
     override fun movePlayer(direction: Direction) {
         // Mock implementation
@@ -108,6 +119,10 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
     }
 
     override fun saveScore(score: Int) {
+        // Mock implementation
+    }
+
+    override fun fetchTopScores() {
         // Mock implementation
     }
 }
