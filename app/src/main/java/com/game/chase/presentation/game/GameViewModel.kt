@@ -38,20 +38,32 @@ class GameViewModel @Inject constructor(
         startNewGame()
     }
 
+    fun destroy() {
+        gameInteractor.destroy()
+    }
+
     override fun movePlayer(direction: Direction) {
-        _gameState.value = gameInteractor.movePlayer(_gameState.value ?: return, direction)
+        viewModelScope.launch {
+            _gameState.value = gameInteractor.movePlayer(_gameState.value ?: return@launch, direction)
+        }
     }
 
     override fun teleportPlayer() {
-        _gameState.value = gameInteractor.teleportPlayer(_gameState.value ?: return)
+        viewModelScope.launch {
+            _gameState.value = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
+        }
     }
 
     override fun useBomb() {
-        _gameState.value = gameInteractor.useBomb(_gameState.value ?: return)
+        viewModelScope.launch {
+            _gameState.value = gameInteractor.useBomb(_gameState.value ?: return@launch)
+        }
     }
 
     override fun resetLevel() {
-        _gameState.value = gameInteractor.handlePlayerCollision(_gameState.value ?: return)
+        viewModelScope.launch {
+            _gameState.value = gameInteractor.handlePlayerCollision(_gameState.value ?: return@launch)
+        }
     }
 
     override fun startNewGame() {

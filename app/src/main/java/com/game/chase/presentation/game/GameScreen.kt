@@ -5,6 +5,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.game.chase.ui.theme.MyApplicationTheme
@@ -16,11 +17,13 @@ import androidx.navigation.compose.rememberNavController
 fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, viewModel: GameViewModelInterface = hiltViewModel<GameViewModel>()) {
     // Assuming GameState is obtained from the ViewModel
     val gameState = viewModel.gameState //TODO does this need .observeAsState()  ?
-//    val gameState by viewModel.gameState.observeAsState(initial = GameState(
-//        player = Player(Position(0, 0)), //TODO fix default position
-//        enemies = mutableListOf(),
-//        collisionSquares = listOf()
-//    ))
+
+    // Call destroy method of GameInteractor when GameScreen leaves the composition
+    DisposableEffect(key1 = viewModel) {
+        onDispose {
+            (viewModel as? GameViewModel)?.destroy()
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxSize(),

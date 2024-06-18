@@ -12,6 +12,9 @@ interface ScoreDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(score: Score)
 
+    @Query("SELECT * FROM scores ORDER BY points DESC LIMIT :limit")
+    suspend fun getTopScores(limit: Int): List<Score>
+
     @Query("SELECT * FROM scores ORDER BY points DESC")
     fun getAllScores(): LiveData<List<Score>>
 }

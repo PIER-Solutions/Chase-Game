@@ -6,13 +6,20 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton 
-class GameRepository @Inject constructor(private val scoreDao: ScoreDao) {
-    val allScores: LiveData<List<Score>> = scoreDao.getAllScores()
-
+class GameRepository @Inject constructor(
+    private val scoreDao: ScoreDao
+) {
     suspend fun insertScore(score: Score) {
         scoreDao.insert(score)
     }
 
+    suspend fun getTopScores(limit: Int): List<Score> {
+        return scoreDao.getTopScores(limit)
+    }
+
+    fun getAllScores(): LiveData<List<Score>> {
+        return scoreDao.getAllScores()
+    }
 
 }
 

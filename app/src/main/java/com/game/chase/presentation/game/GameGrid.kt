@@ -2,6 +2,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
@@ -62,6 +66,7 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
                     Row {
                         for (x in 0 until 19) {
                             val position = Position(x, y)
+                            val isDeadPlayer = state.player.lives == 0
                             val isPlayer = state.player.position == position
                             val isEnemy = state.enemies.any { it.position == position }
                             val isCollision = state.collisionSquares.contains(position)
@@ -71,7 +76,7 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
                                     .size(cellSize)
                                     .background(
                                         when {
-                                            isPlayer -> Color.Blue
+                                            isPlayer -> Color.White
                                             isEnemy -> Color.Red
                                             isCollision -> Color.Gray
                                             else -> Color.White
@@ -81,11 +86,15 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (isPlayer) {
-                                    Text("P", color = Color.White)
+                                    if (isDeadPlayer) {
+                                        Icon(Icons.Filled.Delete, contentDescription = "Dead Player")
+                                    } else {
+                                        Icon(Icons.Filled.Face, contentDescription = "Player")
+                                    }
                                 } else if (isEnemy) {
                                     Text("E", color = Color.White)
                                 } else if (isCollision) {
-                                    Text("X", color = Color.Black)
+                                    Icon(Icons.Filled.Close, contentDescription = "Dead Player")
                                 } else {
 //                                    Text("${position.x},${position.y}")
                                 }
