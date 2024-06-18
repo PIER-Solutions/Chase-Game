@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -17,10 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.game.chase.core.constants.Direction
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.game.chase.data.Player
-import com.game.chase.data.Position
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameState
 
 
@@ -32,12 +32,10 @@ fun PreviewControlModule() {
         onTeleport = { println("Teleport") },
         onBomb = { println("Bomb") },
         onNewGame = { println("New Game") },
-        gameState = MutableLiveData(
-            GameState(
+        gameState = GameState(
             player = Player(Position(0, 0)),
             enemies = mutableListOf(),
             collisionSquares = mutableListOf()
-        )
         )
     )
 }
@@ -49,9 +47,8 @@ fun ControlModule(
     onTeleport: () -> Unit,
     onBomb: () -> Unit,
     onNewGame: () -> Unit,
-    gameState: LiveData<GameState>
+    gameState: GameState?
 ) {
-    val state by gameState.observeAsState()
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -62,9 +59,9 @@ fun ControlModule(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text("Lives: ${state?.player?.lives ?: "?"}")
-            Text("Level: ${state?.level ?: "?"}")
-            Text("Score: ${state?.score ?: "?"}")
+            Text("Lives: ${gameState?.player?.lives ?: "?"}")
+            Text("Level: ${gameState?.level ?: "?"}")
+            Text("Score: ${gameState?.score ?: "?"}")
         }
 
         // Row 2: Teleport, Bomb, New Game, and Save buttons
@@ -73,11 +70,11 @@ fun ControlModule(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(onClick = onTeleport) {
-                Text("Teleport (${state?.player?.teleportUses ?: "?"})")
+                Text("Teleport (${gameState?.player?.teleportUses ?: "?"})")
             }
 
             Button(onClick = onBomb) {
-                Text("Bomb (${state?.player?.bombUses ?: "?"})")
+                Text("Bomb (${gameState?.player?.bombUses ?: "?"})")
             }
 
             Button(onClick = onNewGame) {

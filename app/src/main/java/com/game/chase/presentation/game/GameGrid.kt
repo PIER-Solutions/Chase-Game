@@ -2,6 +2,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
@@ -9,12 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.game.chase.data.Player
-import com.game.chase.data.Position
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameState
 
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
 @Preview(showBackground = true)
@@ -30,11 +33,11 @@ fun PreviewGameGrid() {
     GameGrid(
         modifier = Modifier
         .fillMaxSize()
-        .background(Color.LightGray), gameState = mockGameState)
+        .background(Color.LightGray), gameState = mockGameState.value)
 }
 
 @Composable
-fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
+fun GameGrid(modifier: Modifier = Modifier, gameState: GameState?) {
     val initialState = GameState(
         player = Player(Position(0, 0)),
         enemies = mutableListOf(),
@@ -57,11 +60,12 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
 
         Column {
 
-            gameState.observeAsState(initial = initialState).value.let { state ->
+            (gameState ?: initialState).let { state ->
                 for (y in 0 until 19) {
                     Row {
                         for (x in 0 until 19) {
                             val position = Position(x, y)
+                            val isDeadPlayer = state.player.lives == 0
                             val isPlayer = state.player.position == position
                             val isEnemy = state.enemies.any { it.position == position }
                             val isCollision = state.collisionSquares.contains(position)
@@ -71,7 +75,7 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
                                     .size(cellSize)
                                     .background(
                                         when {
-                                            isPlayer -> Color.Blue
+                                            isPlayer -> Color.White
                                             isEnemy -> Color.Red
                                             isCollision -> Color.Gray
                                             else -> Color.White
@@ -81,11 +85,15 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (isPlayer) {
-                                    Text("P", color = Color.White)
+                                    if (isDeadPlayer) {
+                                        Icon(Icons.Filled.Delete, contentDescription = "Dead Player")
+                                    } else {
+                                        Icon(Icons.Filled.Face, contentDescription = "Player")
+                                    }
                                 } else if (isEnemy) {
                                     Text("E", color = Color.White)
                                 } else if (isCollision) {
-                                    Text("X", color = Color.Black)
+                                    Icon(Icons.Filled.Close, contentDescription = "Dead Player")
                                 } else {
 //                                    Text("${position.x},${position.y}")
                                 }

@@ -5,10 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.chase.core.constants.Direction
-import com.game.chase.data.GameRepository
-import com.game.chase.data.Player
-import com.game.chase.data.Position
-import com.game.chase.data.Score
+import com.game.chase.data.db.GameRepository
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
+import com.game.chase.data.entity.Score
 import com.game.chase.domain.game.GameState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -17,12 +17,14 @@ import com.game.chase.domain.game.GameInteractor
 
 interface GameViewModelInterface {
     val gameState: LiveData<GameState>
+    val topScores: LiveData<List<Score>>
     fun movePlayer(direction: Direction)
     fun teleportPlayer()
     fun useBomb()
     fun resetLevel()
     fun startNewGame()
     fun saveScore(score: Int)
+    fun fetchTopScores()
 }
 
 @HiltViewModel
@@ -33,25 +35,38 @@ class GameViewModel @Inject constructor(
 
     private val _gameState = MutableLiveData<GameState>()
     override val gameState: LiveData<GameState> = _gameState
+    override val topScores: LiveData<List<Score>> = MutableLiveData()
 
     init {
         startNewGame()
     }
 
+    fun destroy() {
+        gameInteractor.destroy()
+    }
+
     override fun movePlayer(direction: Direction) {
-        _gameState.value = gameInteractor.movePlayer(_gameState.value ?: return, direction)
+        viewModelScope.launch {
+            _gameState.value = gameInteractor.movePlayer(_gameState.value ?: return@launch, direction)
+        }
     }
 
     override fun teleportPlayer() {
-        _gameState.value = gameInteractor.teleportPlayer(_gameState.value ?: return)
+        viewModelScope.launch {
+            _gameState.value = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
+        }
     }
 
     override fun useBomb() {
-        _gameState.value = gameInteractor.useBomb(_gameState.value ?: return)
+        viewModelScope.launch {
+            _gameState.value = gameInteractor.useBomb(_gameState.value ?: return@launch)
+        }
     }
 
     override fun resetLevel() {
-        _gameState.value = gameInteractor.handlePlayerCollision(_gameState.value ?: return)
+        viewModelScope.launch {
+            _gameState.value = gameInteractor.handlePlayerCollision(_gameState.value ?: return@launch)
+        }
     }
 
     override fun startNewGame() {
@@ -61,6 +76,12 @@ class GameViewModel @Inject constructor(
     override fun saveScore(score: Int) {
         viewModelScope.launch {
             gameRepository.insertScore(Score(points = score))
+        }
+    }
+
+    override fun fetchTopScores() {
+        viewModelScope.launch {
+            (topScores as MutableLiveData).value = gameRepository.getTopScores(10)
         }
     }
 }
@@ -74,6 +95,8 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
             collisionSquares = mutableListOf()
         )
     )
+    override val topScores: LiveData<List<Score>>
+        get() = MutableLiveData()
 
     override fun movePlayer(direction: Direction) {
         // Mock implementation
@@ -96,6 +119,10 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
     }
 
     override fun saveScore(score: Int) {
+        // Mock implementation
+    }
+
+    override fun fetchTopScores() {
         // Mock implementation
     }
 }

@@ -81,6 +81,7 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.inline)
     testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.arch.core.testing)
 
     // ViewModel and LiveData
     implementation(libs.androidx.lifecycle.viewmodel.compose)

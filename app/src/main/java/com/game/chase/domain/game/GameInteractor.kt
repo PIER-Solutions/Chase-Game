@@ -2,22 +2,32 @@ package com.game.chase.domain.game
 
 import com.game.chase.core.constants.Direction
 import com.game.chase.core.constants.GRID_SIZE
-import com.game.chase.data.GameRepository
-import com.game.chase.data.Player
-import com.game.chase.data.Position
-import com.game.chase.data.Enemy
+import com.game.chase.data.db.GameRepository
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
+import com.game.chase.data.entity.Enemy
+import com.game.chase.data.entity.Score
 import com.game.chase.domain.game.util.PositionGenerator
+import kotlinx.coroutines.CoroutineScope
 import java.util.Random
 import javax.inject.Inject
 import kotlin.math.sign
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.withContext
+import kotlin.collections.*
 
 class GameInteractor @Inject constructor(
     private val gameRepository: GameRepository,
     private val positionGenerator: PositionGenerator)
      {
 
-    fun movePlayer(gameState: GameState, direction: Direction): GameState {
+     private val updateScope = CoroutineScope(Dispatchers.Default)
+     fun destroy() {
+         updateScope.cancel()
+     }
+
+    suspend fun movePlayer(gameState: GameState, direction: Direction): GameState {
         val oldPlayer = gameState.player
         val newPosition = when (direction) {
             Direction.UP -> Position(oldPlayer.position.x, (oldPlayer.position.y - 1))
@@ -32,13 +42,16 @@ class GameInteractor @Inject constructor(
         } else if (newPosition.x < 0 || newPosition.x >= GRID_SIZE || newPosition.y < 0 || newPosition.y >= GRID_SIZE) {
             // Add error response message
             return gameState
+        } else if (oldPlayer.lives <= 0) {
+            // Add error response message
+            return gameState
         } else {
             val newPlayer = oldPlayer.copy(position = newPosition)
             return updateEnemies(gameState.copy(player = newPlayer))
         }
     }
 
-    fun teleportPlayer(gameState: GameState): GameState {
+    suspend fun teleportPlayer(gameState: GameState): GameState {
         val oldPlayer = gameState.player
         if (oldPlayer.teleportUses > 0) {
             var newPosition: Position
@@ -58,7 +71,7 @@ class GameInteractor @Inject constructor(
                 gameState.collisionSquares.contains(position)
     }
 
-    fun useBomb(gameState: GameState): GameState {
+    suspend fun useBomb(gameState: GameState): GameState {
         val oldPlayer = gameState.player
         if (oldPlayer.bombUses > 0) {
             gameState.player.bombUses--
@@ -77,7 +90,7 @@ class GameInteractor @Inject constructor(
         return gameState
     }
 
-    fun updateEnemies(gameState: GameState): GameState {
+    suspend fun updateEnemies(gameState: GameState): GameState {
         val oldEnemies = gameState.enemies
         val playerPosition = gameState.player.position
         val newEnemies = mutableListOf<Enemy>()
@@ -92,7 +105,7 @@ class GameInteractor @Inject constructor(
         return detectCollisions(gameState.copy(enemies = newEnemies))
     }
 
-     fun detectCollisions(gameState: GameState): GameState {
+     suspend fun detectCollisions(gameState: GameState): GameState {
          val playerPosition = gameState.player.position
          val enemies = gameState.enemies.toMutableList()
          val collisionSquares = gameState.collisionSquares.toMutableList()
@@ -140,22 +153,30 @@ class GameInteractor @Inject constructor(
      }
 
 
-    fun handlePlayerCollision(gameState: GameState): GameState {
-        val oldPlayer = gameState.player
-        oldPlayer.lives--
-        return if (oldPlayer.lives > 0) {
-            GameState(
-                player = oldPlayer.copy(position = Position(GRID_SIZE / 2, GRID_SIZE / 2)),
-                enemies = generateEnemies(gameState.level, oldPlayer.position).toMutableList(),
-                collisionSquares = mutableListOf(),
-                score = gameState.score,
-                level = gameState.level
-            )
-        } else {
-            //TODO - [Scoring]: Save score if it is a new high score
-            startNewGame()
-        }
-    }
+     suspend fun handlePlayerCollision(gameState: GameState): GameState {
+         val oldPlayer = gameState.player
+         oldPlayer.lives--
+         if (oldPlayer.lives > 0) {
+             return GameState(
+                 player = oldPlayer.copy(position = Position(GRID_SIZE / 2, GRID_SIZE / 2)),
+                 enemies = generateEnemies(gameState.level, oldPlayer.position).toMutableList(),
+                 collisionSquares = mutableListOf(),
+                 score = gameState.score,
+                 level = gameState.level
+             )
+         } else {
+             // Insert the current score, then query the top 10 scores so see if this is a new high score
+             withContext(Dispatchers.IO) { gameRepository.insertScore(Score(points = gameState.score)) }
+             val topScores = withContext(Dispatchers.IO) { gameRepository.getTopScores(10) }
+             if (topScores.any { it.points == gameState.score }) {
+                 // The current score is in the top 10
+
+                 // TODO: Add dialog for the user that they have a high score
+             }
+
+             return gameState.copy(player = oldPlayer)
+         }
+     }
 
     fun nextLevel(gameState: GameState): GameState {
         val newLevel = gameState.level + 1

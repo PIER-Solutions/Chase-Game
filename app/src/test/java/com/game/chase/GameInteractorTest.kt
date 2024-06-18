@@ -2,14 +2,15 @@ package com.game.chase
 
 import com.game.chase.core.constants.Direction
 import com.game.chase.core.constants.GRID_SIZE
-import com.game.chase.data.Enemy
-import com.game.chase.data.GameRepository
-import com.game.chase.data.Player
-import com.game.chase.data.Position
+import com.game.chase.data.entity.Enemy
+import com.game.chase.data.db.GameRepository
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameInteractor
 import com.game.chase.domain.game.GameState
 import com.game.chase.domain.game.util.PositionGenerator
 import com.game.chase.domain.game.util.impl.SpecificPositionGenerator
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -23,6 +24,7 @@ import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.check
+import org.mockito.kotlin.whenever
 
 class GameInteractorTest {
     /*
@@ -44,6 +46,12 @@ class GameInteractorTest {
         gameRepository = mock(GameRepository::class.java)
         positionGenerator = SpecificPositionGenerator(listOf(Position(0, 0), Position(1, 1), Position(2, 2)))
         gameInteractor = GameInteractor(gameRepository, positionGenerator)
+
+        // Specify the behavior of gameRepository
+        runBlocking {
+            whenever(gameRepository.insertScore(any())).thenReturn(Unit)
+            whenever(gameRepository.getTopScores(any())).thenReturn(emptyList())
+        }
     }
 
     //region movePlayer Tests

@@ -3,9 +3,9 @@ package com.game.chase.core.di
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
-import com.game.chase.data.GameDatabase
-import com.game.chase.data.GameRepository
-import com.game.chase.data.ScoreDao
+import com.game.chase.data.db.GameDatabase
+import com.game.chase.data.db.GameRepository
+import com.game.chase.data.db.ScoreDao
 import com.game.chase.domain.game.util.PositionGenerator
 import com.game.chase.domain.game.util.impl.RandomPositionGenerator
 import dagger.Module

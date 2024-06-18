@@ -1,4 +1,4 @@
-package com.game.chase.data
+package com.game.chase.data.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
