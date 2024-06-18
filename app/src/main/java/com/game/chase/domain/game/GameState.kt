@@ -10,4 +10,5 @@ data class GameState(
     val collisionSquares: MutableList<Position>,
     var score: Int = 0,
     var level: Int = 1,
+    var shouldShowEndOfGameDialog: Boolean = false
 )

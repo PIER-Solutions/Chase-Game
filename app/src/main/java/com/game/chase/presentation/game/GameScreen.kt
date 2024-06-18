@@ -18,13 +18,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 
 @Composable
 fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, viewModel: GameViewModelInterface = hiltViewModel<GameViewModel>()) {
     // Assuming GameState is obtained from the ViewModel
-    val gameState = viewModel.gameState //TODO does this need .observeAsState()  ?
+    val gameState = viewModel.gameState.observeAsState().value
     val topScores = viewModel.topScores.observeAsState()
+
+    val showEndOfGameDialog = remember { mutableStateOf(false) }
 
     // Call destroy method of GameInteractor when GameScreen leaves the composition
     DisposableEffect(key1 = viewModel) {
@@ -33,10 +37,9 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
         }
     }
 
-    if (gameState.value?.player?.lives == 0) {
-        viewModel.fetchTopScores()
+    if (gameState?.player?.lives == 0) {
         AlertDialog(
-            onDismissRequest = { /*TODO: Handle on dismiss*/ },
+            onDismissRequest = { navController.popBackStack() },
             title = { Text(text = "Game Over") },
             text = {
                 Column {
@@ -47,8 +50,11 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
                 }
             },
             confirmButton = {
-                Button(onClick = { /*TODO: Handle on confirm*/ }) {
-                    Text("OK")
+                Button(onClick = {
+                    viewModel.startNewGame()
+                    showEndOfGameDialog.value = false // Close dialog when button is clicked
+                }) {
+                    Text("New Game")
                 }
             }
         )
@@ -60,7 +66,8 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         GameGrid(modifier = Modifier.weight(0.5f).fillMaxWidth(), gameState = gameState)
-        ControlModule(modifier = Modifier.weight(0.5f).fillMaxWidth().height(100.dp),
+        ControlModule(
+            modifier = Modifier.weight(0.5f).fillMaxWidth().height(100.dp),
             onMove = { direction -> viewModel.movePlayer(direction) },
             onTeleport = { viewModel.teleportPlayer() },
             onBomb = { viewModel.useBomb() },

@@ -18,7 +18,6 @@ import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameState
 
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
 @Preview(showBackground = true)
@@ -34,11 +33,11 @@ fun PreviewGameGrid() {
     GameGrid(
         modifier = Modifier
         .fillMaxSize()
-        .background(Color.LightGray), gameState = mockGameState)
+        .background(Color.LightGray), gameState = mockGameState.value)
 }
 
 @Composable
-fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
+fun GameGrid(modifier: Modifier = Modifier, gameState: GameState?) {
     val initialState = GameState(
         player = Player(Position(0, 0)),
         enemies = mutableListOf(),
@@ -61,7 +60,7 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: LiveData<GameState>) {
 
         Column {
 
-            gameState.observeAsState(initial = initialState).value.let { state ->
+            (gameState ?: initialState).let { state ->
                 for (y in 0 until 19) {
                     Row {
                         for (x in 0 until 19) {
