@@ -63,7 +63,7 @@ fun ControlModule(
             Text("Level: ${gameState?.level ?: "?"}")
             Text("Score: ${gameState?.score ?: "?"}")
         }
-
+        Spacer(modifier = Modifier.height(20.dp))
         // Row 2: Teleport, Bomb, New Game, and Save buttons
         Row(
             modifier = Modifier.fillMaxWidth(),

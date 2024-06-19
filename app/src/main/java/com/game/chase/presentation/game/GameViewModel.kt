@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.chase.core.constants.Direction
 import com.game.chase.data.db.GameRepository
+import com.game.chase.data.entity.Enemy
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
 import com.game.chase.data.entity.Score
@@ -90,9 +91,18 @@ class GameViewModel @Inject constructor(
 class MockGameViewModel : ViewModel(), GameViewModelInterface {
     override val gameState = MutableLiveData(
         GameState(
-            player = Player(Position(0, 0)),
-            enemies = mutableListOf(),
-            collisionSquares = mutableListOf()
+            player = Player(Position(9, 9), lives = 3, teleportUses = 2, bombUses = 2),
+            enemies = mutableListOf(
+                Enemy(Position(1, 7)),
+                Enemy(Position(12, 2)),
+                Enemy(Position(3, 13))
+            ),
+            collisionSquares = mutableListOf(
+                Position(14, 4),
+                Position(6, 16)
+            ),
+            score = 30,
+            level = 3
         )
     )
     override val topScores: LiveData<List<Score>>

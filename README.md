@@ -49,6 +49,8 @@ The game is inspired by the classic "Daleks" game. The objective is to destroy E
 - Button for starting a new game.
 - Mechanism for keeping track of scores via a Room database.
 
+### Game theme link:
+http://material-foundation.github.io?primary=%23C5B6A1&bodyFont=Acme&displayFont=Acme&colorMatch=true
 ----------------
 
 Architectural Overview
