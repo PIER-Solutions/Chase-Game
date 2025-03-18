@@ -58,7 +58,7 @@ class GameInteractor @Inject constructor(
             do {
                 // TBD - may need to add an alternate algorithm to find a new position once there are too many occupied squares (or switch to tracking game state via each square knowing its state
                 newPosition = positionGenerator.getRandomPosition()
-            } while (isPositionOccupied(newPosition, gameState)) //TODO: needs to try to find a new position until an acceptable one is found
+            } while (isPositionOccupied(newPosition, gameState))
             val newPlayer = oldPlayer.copy(position = newPosition, teleportUses = oldPlayer.teleportUses - 1)
             return gameState.copy(player = newPlayer)
         }
@@ -103,28 +103,6 @@ class GameInteractor @Inject constructor(
             val newPosition = Position(enemy.position.x + dx.sign, enemy.position.y + dy.sign)
             newEnemies.add(enemy.copy(position = newPosition))
         }
-
-//        // for cardinal movement preferred (need to update unit tests if we go this way)
-//        for (enemy in oldEnemies) {
-//            val dx = playerPosition.x - enemy.position.x
-//            val dy = playerPosition.y - enemy.position.y
-//
-//            val absDx = abs(dx)
-//            val absDy = abs(dy)
-//
-//            val newPosition = if (absDx > absDy) {
-//                // Move in the x direction
-//                Position(enemy.position.x + dx.sign, enemy.position.y)
-//            } else if (absDy > absDx) {
-//                // Move in the y direction
-//                Position(enemy.position.x, enemy.position.y + dy.sign)
-//            } else {
-//                // Move in both directions (diagonal)
-//                Position(enemy.position.x + dx.sign, enemy.position.y + dy.sign)
-//            }
-//            newEnemies.add(enemy.copy(position = newPosition))
-//        }
-
 
         return gameState.copy(enemies = newEnemies)
     }
@@ -174,9 +152,10 @@ class GameInteractor @Inject constructor(
     fun nextLevel(gameState: GameState): GameState {
         val newLevel = gameState.level + 1
         val newScore = gameState.score + (3 * gameState.level)
+        val newPlayerPosition = getPlayerStartPosition()
         return GameState(
-            player = gameState.player.copy(position = getPlayerStartPosition()),
-            enemies = generateEnemies(newLevel, gameState.player.position).toMutableList(),
+            player = gameState.player.copy(position = newPlayerPosition),
+            enemies = generateEnemies(newLevel, newPlayerPosition).toMutableList(),
             collisionSquares = mutableListOf(),
             score = newScore,
             level = newLevel
@@ -186,7 +165,7 @@ class GameInteractor @Inject constructor(
     fun startNewGame(): GameState {
         return GameState(
             player = Player(position = getPlayerStartPosition()),
-            enemies = generateEnemies(1, Position(GRID_WIDTH / 2, GRID_HEIGHT / 2)).toMutableList(),
+            enemies = generateEnemies(1, getPlayerStartPosition()).toMutableList(),
             collisionSquares = mutableListOf(),
             score = 0,
             level = 1

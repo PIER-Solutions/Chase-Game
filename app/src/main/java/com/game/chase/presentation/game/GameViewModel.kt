@@ -70,14 +70,14 @@ class GameViewModel @Inject constructor(
             oldPlayer.lives--
             if (oldPlayer.lives > 0) {
                 // decrement a life and reset the level
+                val newPlayerPosition = gameInteractor.getPlayerStartPosition()
                 val newState = GameState(
-                    player = oldPlayer.copy(position = gameInteractor.getPlayerStartPosition()),
-                    enemies = gameInteractor.generateEnemies(nextGameState.level, oldPlayer.position).toMutableList(),
+                    player = oldPlayer.copy(position = newPlayerPosition),
+                    enemies = gameInteractor.generateEnemies(nextGameState.level, newPlayerPosition).toMutableList(),
                     collisionSquares = mutableListOf(),
                     score = nextGameState.score,
                     level = nextGameState.level
                 )
-                //TODO do something with the new state
                 _gameState.value = newState
             } else {
                 // Player has no lives left, save the score and end the game
@@ -87,6 +87,13 @@ class GameViewModel @Inject constructor(
                 _showEndOfGameDialog.value = true
             }
         } else if (nextGameState.enemies.isEmpty()) {
+            // Add bonuses
+            when
+                (nextGameState.level % 3 == 0) {
+                    true -> nextGameState.player.bombUses++
+                    false -> nextGameState.player.teleportUses++
+                }
+
             _gameState.value = gameInteractor.nextLevel(nextGameState)
         } else {
             _gameState.value = nextGameState

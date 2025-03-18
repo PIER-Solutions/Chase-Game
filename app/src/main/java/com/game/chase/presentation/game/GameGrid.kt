@@ -22,6 +22,7 @@ import com.game.chase.core.constants.GRID_HEIGHT
 import com.game.chase.core.constants.GRID_WIDTH
 import com.game.chase.presentation.game.MockGameViewModel
 import kotlin.math.abs
+import kotlin.math.ceil
 
 @Preview(
     showBackground = false,
@@ -64,12 +65,14 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: GameState?) {
                             val isPlayer = state.player.position == position
                             val isEnemy = state.enemies.any { it.position == position }
                             val isCollision = state.collisionSquares.contains(position)
-
+//                            val isCentralSquare = (abs(position.x - ceil((GRID_WIDTH / 2).toDouble()).toInt()) <= 2 && abs(position.y - ceil((GRID_HEIGHT / 2).toDouble()).toInt()) <= 2)
                             Box(
                                 modifier = Modifier
                                     .size(cellSize)
                                     .background(
+
                                         when {
+//                                            isCentralSquare -> MaterialTheme.colorScheme.onBackground
 //                                            isPlayer -> MaterialTheme.colorScheme.onBackground
 //                                            isEnemy -> MaterialTheme.colorScheme.onBackground
                                             isCollision -> MaterialTheme.colorScheme.tertiary
