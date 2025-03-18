@@ -1,7 +1,8 @@
 package com.game.chase.domain.game
 
 import com.game.chase.core.constants.Direction
-import com.game.chase.core.constants.GRID_SIZE
+import com.game.chase.core.constants.GRID_HEIGHT
+import com.game.chase.core.constants.GRID_WIDTH
 import com.game.chase.data.db.GameRepository
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
@@ -16,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 import kotlin.collections.*
+import kotlin.math.ceil
 
 class GameInteractor @Inject constructor(
     private val gameRepository: GameRepository,
@@ -39,7 +41,7 @@ class GameInteractor @Inject constructor(
         if (gameState.collisionSquares.contains(newPosition)) {
             // Add error response message
             return gameState
-        } else if (newPosition.x < 0 || newPosition.x >= GRID_SIZE || newPosition.y < 0 || newPosition.y >= GRID_SIZE) {
+        } else if (newPosition.x < 0 || newPosition.x >= GRID_WIDTH || newPosition.y < 0 || newPosition.y >= GRID_HEIGHT) {
             // Add error response message
             return gameState
         } else if (oldPlayer.lives <= 0) {
@@ -79,7 +81,7 @@ class GameInteractor @Inject constructor(
             var updatedScore = gameState.score
             for (i in gameState.enemies.indices.reversed()) {
                 val enemy = gameState.enemies[i]
-                if (isWithinRadius(1, gameState.player.position, enemy.position, )) {
+                if (isWithinRadius(1, gameState.player.position, enemy.position)) {
                     gameState.collisionSquares.add(enemy.position)
                     gameState.enemies.removeAt(i)
                     updatedScore++
@@ -95,12 +97,36 @@ class GameInteractor @Inject constructor(
         val playerPosition = gameState.player.position
         val newEnemies = mutableListOf<Enemy>()
 
+        // for simple diagonal movement:
         for (enemy in oldEnemies) {
             val dx = playerPosition.x - enemy.position.x
             val dy = playerPosition.y - enemy.position.y
+
             val newPosition = Position(enemy.position.x + dx.sign, enemy.position.y + dy.sign)
             newEnemies.add(enemy.copy(position = newPosition))
         }
+
+//        // for cardinal movement preferred (need to update unit tests if we go this way)
+//        for (enemy in oldEnemies) {
+//            val dx = playerPosition.x - enemy.position.x
+//            val dy = playerPosition.y - enemy.position.y
+//
+//            val absDx = abs(dx)
+//            val absDy = abs(dy)
+//
+//            val newPosition = if (absDx > absDy) {
+//                // Move in the x direction
+//                Position(enemy.position.x + dx.sign, enemy.position.y)
+//            } else if (absDy > absDx) {
+//                // Move in the y direction
+//                Position(enemy.position.x, enemy.position.y + dy.sign)
+//            } else {
+//                // Move in both directions (diagonal)
+//                Position(enemy.position.x + dx.sign, enemy.position.y + dy.sign)
+//            }
+//            newEnemies.add(enemy.copy(position = newPosition))
+//        }
+
 
         return detectCollisions(gameState.copy(enemies = newEnemies))
     }
@@ -158,7 +184,7 @@ class GameInteractor @Inject constructor(
          oldPlayer.lives--
          if (oldPlayer.lives > 0) {
              return GameState(
-                 player = oldPlayer.copy(position = Position(GRID_SIZE / 2, GRID_SIZE / 2)),
+                 player = oldPlayer.copy(position = getPlayerStartPosition()),
                  enemies = generateEnemies(gameState.level, oldPlayer.position).toMutableList(),
                  collisionSquares = mutableListOf(),
                  score = gameState.score,
@@ -178,11 +204,15 @@ class GameInteractor @Inject constructor(
          }
      }
 
+     private fun getPlayerStartPosition(): Position {
+         return Position(ceil((GRID_WIDTH / 2).toDouble()).toInt(), ceil((GRID_HEIGHT / 2).toDouble()).toInt())
+     }
+
     fun nextLevel(gameState: GameState): GameState {
         val newLevel = gameState.level + 1
         val newScore = gameState.score + (3 * gameState.level)
         return GameState(
-            player = gameState.player.copy(position = Position(GRID_SIZE / 2, GRID_SIZE / 2)),
+            player = gameState.player.copy(position = getPlayerStartPosition()),
             enemies = generateEnemies(newLevel, gameState.player.position).toMutableList(),
             collisionSquares = mutableListOf(),
             score = newScore,
@@ -192,8 +222,8 @@ class GameInteractor @Inject constructor(
 
     fun startNewGame(): GameState {
         return GameState(
-            player = Player(Position(GRID_SIZE / 2, GRID_SIZE / 2)),
-            enemies = generateEnemies(1, Position(GRID_SIZE / 2, GRID_SIZE / 2)).toMutableList(),
+            player = Player(position = getPlayerStartPosition()),
+            enemies = generateEnemies(1, Position(GRID_WIDTH / 2, GRID_HEIGHT / 2)).toMutableList(),
             collisionSquares = mutableListOf(),
             score = 0,
             level = 1
@@ -202,13 +232,12 @@ class GameInteractor @Inject constructor(
 
     fun generateEnemies(level: Int, playerPosition: Position): List<Enemy> {
         val enemies = mutableListOf<Enemy>()
-        val gridSize = GRID_SIZE
         val random = Random()
 
         repeat(level + 2) {
             var position: Position
             do {
-                position = Position(random.nextInt(gridSize), random.nextInt(gridSize))
+                position = Position(random.nextInt(GRID_WIDTH), random.nextInt(GRID_HEIGHT))
             } while (isWithinRadius(2, position, playerPosition)) // Ensure enemies are not too close to the player
             enemies.add(Enemy(position))
         }

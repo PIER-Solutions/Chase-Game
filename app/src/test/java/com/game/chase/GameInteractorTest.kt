@@ -1,9 +1,10 @@
 package com.game.chase
 
 import com.game.chase.core.constants.Direction
-import com.game.chase.core.constants.GRID_SIZE
-import com.game.chase.data.entity.Enemy
+import com.game.chase.core.constants.GRID_HEIGHT
+import com.game.chase.core.constants.GRID_WIDTH
 import com.game.chase.data.db.GameRepository
+import com.game.chase.data.entity.Enemy
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameInteractor
@@ -22,9 +23,11 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.check
 import org.mockito.kotlin.whenever
+import kotlin.math.ceil
 
 class GameInteractorTest {
     /*
@@ -35,7 +38,7 @@ class GameInteractorTest {
     private lateinit var positionGenerator: PositionGenerator
     private lateinit var gameInteractor: GameInteractor
 
-    private val defaultPlayerPosition = Position(GRID_SIZE / 2, GRID_SIZE / 2)
+    private val defaultPlayerPosition = Position(ceil((GRID_WIDTH / 2).toDouble()).toInt(), ceil((GRID_HEIGHT / 2).toDouble()).toInt())
     private val defaultEnemyList =  mutableListOf(
         Enemy(Position(defaultPlayerPosition.x + 3, defaultPlayerPosition.y)),
         Enemy(Position(defaultPlayerPosition.x + 5, defaultPlayerPosition.y - 3)),
@@ -174,7 +177,7 @@ class GameInteractorTest {
     @Test
     fun testMovePlayer_OutOfBounds_Down() = runTest {
         // Arrange
-        val initialPlayerPos = Position(GRID_SIZE,GRID_SIZE)
+        val initialPlayerPos = Position(GRID_WIDTH, GRID_HEIGHT)
         val initialGameState = GameState(
             player = Player(initialPlayerPos),
             enemies = mutableListOf(
@@ -192,7 +195,7 @@ class GameInteractorTest {
     @Test
     fun testMovePlayer_OutOfBounds_Right() = runTest {
         // Arrange
-        val initialPlayerPos = Position(GRID_SIZE,GRID_SIZE)
+        val initialPlayerPos = Position(GRID_WIDTH, GRID_HEIGHT)
         val initialGameState = GameState(
             player = Player(initialPlayerPos),
             enemies = mutableListOf(
@@ -809,7 +812,7 @@ class GameInteractorTest {
 
         val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
 
-        assertEquals(Position(GRID_SIZE / 2, GRID_SIZE / 2), resultGameState.player.position)
+        assertEquals(Position(ceil((GRID_WIDTH / 2).toDouble()).toInt(), ceil((GRID_HEIGHT / 2).toDouble()).toInt()), resultGameState.player.position)
     }
 
     @Test
@@ -858,19 +861,22 @@ class GameInteractorTest {
     }
 
     @Test
-    fun testHandlePlayerCollision_CallsStartNewGameWhenNoLivesRemain() = runTest {
+    fun testHandlePlayerCollision_CallsInsertScoreWithCorrectScoreWhenNoLivesRemain() = runTest {
+        // Arrange
+        val initialScore = 100
         val initialGameState = GameState(
-            player = Player(defaultPlayerPosition, lives = 1),
+            player = Player(defaultPlayerPosition, lives = 0), // Player has no lives
             enemies = defaultEnemyList,
-            collisionSquares = mutableListOf()
+            collisionSquares = mutableListOf(),
+            score = initialScore // Set the initial score
         )
-        val spyInteractor = spy(gameInteractor)
+        val gameInteractor = GameInteractor(gameRepository, positionGenerator)
 
-        //Act
-        spyInteractor.handlePlayerCollision(initialGameState)
+        // Act
+        gameInteractor.handlePlayerCollision(initialGameState)
 
-        //Assert
-        verify(spyInteractor).startNewGame()
+        // Assert
+        verify(gameRepository).insertScore(argThat { score -> score.points == initialScore}) // Verify with the correct score (but ignore other fields in the object)
     }
     //endregion
 
@@ -899,7 +905,7 @@ class GameInteractorTest {
 
         val resultGameState = gameInteractor.nextLevel(initialGameState)
 
-        assertEquals(Position(GRID_SIZE / 2, GRID_SIZE / 2), resultGameState.player.position)
+        assertEquals(Position(ceil((GRID_WIDTH / 2).toDouble()).toInt(), ceil((GRID_HEIGHT / 2).toDouble()).toInt()), resultGameState.player.position)
     }
 
     @Test

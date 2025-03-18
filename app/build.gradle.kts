@@ -82,7 +82,9 @@ dependencies {
     testImplementation(libs.mockito.inline)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.arch.core.testing)
-
+    testImplementation(libs.bytebuddy)
+    testImplementation(libs.bytebuddy.agent)
+    
     // ViewModel and LiveData
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.livedata.ktx)

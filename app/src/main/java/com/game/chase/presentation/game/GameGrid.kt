@@ -16,10 +16,12 @@ import com.game.chase.domain.game.GameState
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.MutableLiveData
-import com.game.chase.core.constants.GRID_SIZE
 import com.game.chase.ui.theme.*
 import android.content.res.Configuration
+import com.game.chase.core.constants.GRID_HEIGHT
+import com.game.chase.core.constants.GRID_WIDTH
 import com.game.chase.presentation.game.MockGameViewModel
+import kotlin.math.abs
 
 @Preview(
     showBackground = false,
@@ -48,14 +50,15 @@ fun GameGrid(modifier: Modifier = Modifier, gameState: GameState?) {
 
     BoxWithConstraints(modifier = modifier.border(2.dp, MaterialTheme.colorScheme.outline)) {
         val gridSize = maxWidth.value.coerceAtMost(maxHeight.value)
-        val cellSize = (gridSize / (GRID_SIZE + 1)).dp
+
+        val cellSize = (gridSize / (minOf(abs(GRID_WIDTH), abs(GRID_HEIGHT)) + 1)).dp
 
         Column {
 
             (gameState ?: initialState).let { state ->
-                for (y in 0 until GRID_SIZE) {
+                for (y in 0 until GRID_HEIGHT) {
                     Row {
-                        for (x in 0 until GRID_SIZE) {
+                        for (x in 0 until GRID_WIDTH) {
                             val position = Position(x, y)
                             val isDeadPlayer = state.player.lives == 0
                             val isPlayer = state.player.position == position

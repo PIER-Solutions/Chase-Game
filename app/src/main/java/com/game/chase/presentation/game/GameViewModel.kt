@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.chase.core.constants.Direction
-import com.game.chase.data.db.GameRepository
+import com.game.chase.data.db.impl.DefaultGameRepository
 import com.game.chase.data.entity.Enemy
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
@@ -30,7 +30,7 @@ interface GameViewModelInterface {
 
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    private val gameRepository: GameRepository,
+    private val gameRepository: DefaultGameRepository,
     private val gameInteractor: GameInteractor
 ) : ViewModel(), GameViewModelInterface {
 
