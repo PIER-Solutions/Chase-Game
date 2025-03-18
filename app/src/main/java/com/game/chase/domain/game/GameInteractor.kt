@@ -7,7 +7,6 @@ import com.game.chase.data.db.GameRepository
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
 import com.game.chase.data.entity.Enemy
-import com.game.chase.data.entity.Score
 import com.game.chase.domain.game.util.PositionGenerator
 import kotlinx.coroutines.CoroutineScope
 import java.util.Random
@@ -15,21 +14,20 @@ import javax.inject.Inject
 import kotlin.math.sign
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.withContext
 import kotlin.collections.*
+import kotlin.math.abs
 import kotlin.math.ceil
 
 class GameInteractor @Inject constructor(
-    private val gameRepository: GameRepository,
     private val positionGenerator: PositionGenerator)
      {
 
-     private val updateScope = CoroutineScope(Dispatchers.Default)
+    private val updateScope = CoroutineScope(Dispatchers.Default)
      fun destroy() {
          updateScope.cancel()
      }
 
-    suspend fun movePlayer(gameState: GameState, direction: Direction): GameState {
+    fun movePlayer(gameState: GameState, direction: Direction): GameState {
         val oldPlayer = gameState.player
         val newPosition = when (direction) {
             Direction.UP -> Position(oldPlayer.position.x, (oldPlayer.position.y - 1))
@@ -49,11 +47,11 @@ class GameInteractor @Inject constructor(
             return gameState
         } else {
             val newPlayer = oldPlayer.copy(position = newPosition)
-            return updateEnemies(gameState.copy(player = newPlayer))
+            return gameState.copy(player = newPlayer)
         }
     }
 
-    suspend fun teleportPlayer(gameState: GameState): GameState {
+    fun teleportPlayer(gameState: GameState): GameState {
         val oldPlayer = gameState.player
         if (oldPlayer.teleportUses > 0) {
             var newPosition: Position
@@ -62,7 +60,7 @@ class GameInteractor @Inject constructor(
                 newPosition = positionGenerator.getRandomPosition()
             } while (isPositionOccupied(newPosition, gameState)) //TODO: needs to try to find a new position until an acceptable one is found
             val newPlayer = oldPlayer.copy(position = newPosition, teleportUses = oldPlayer.teleportUses - 1)
-            return updateEnemies(gameState.copy(player = newPlayer))
+            return gameState.copy(player = newPlayer)
         }
         return gameState
     }
@@ -73,7 +71,7 @@ class GameInteractor @Inject constructor(
                 gameState.collisionSquares.contains(position)
     }
 
-    suspend fun useBomb(gameState: GameState): GameState {
+    fun useBomb(gameState: GameState): GameState {
         val oldPlayer = gameState.player
         if (oldPlayer.bombUses > 0) {
             gameState.player.bombUses--
@@ -87,12 +85,12 @@ class GameInteractor @Inject constructor(
                     updatedScore++
                 }
             }
-            return updateEnemies(gameState.copy(score = updatedScore))
+            return gameState.copy(score = updatedScore)
         }
         return gameState
     }
 
-    suspend fun updateEnemies(gameState: GameState): GameState {
+    fun updateEnemies(gameState: GameState): GameState {
         val oldEnemies = gameState.enemies
         val playerPosition = gameState.player.position
         val newEnemies = mutableListOf<Enemy>()
@@ -128,10 +126,10 @@ class GameInteractor @Inject constructor(
 //        }
 
 
-        return detectCollisions(gameState.copy(enemies = newEnemies))
+        return gameState.copy(enemies = newEnemies)
     }
 
-     suspend fun detectCollisions(gameState: GameState): GameState {
+     fun detectCollisions(gameState: GameState): GameState {
          val playerPosition = gameState.player.position
          val enemies = gameState.enemies.toMutableList()
          val collisionSquares = gameState.collisionSquares.toMutableList()
@@ -166,45 +164,10 @@ class GameInteractor @Inject constructor(
                  scoredEnemies.add(enemy) // Add enemy to scoredEnemies set
              }
          }
-
-         // Check if there are no enemies remaining and the player is not on a collision square
-         return if (collisionSquares.contains(playerPosition)) {
-             handlePlayerCollision(gameState.copy(score = score))
-         } else if (enemies.isEmpty() && !collisionSquares.contains(playerPosition)) {
-             nextLevel(gameState.copy(score = score))
-         } else {
-             // Update the game state with the new enemies and collision squares
-             gameState.copy(enemies = enemies, collisionSquares = collisionSquares, score = score)
-         }
+         return gameState.copy(enemies = enemies, collisionSquares = collisionSquares, score = score)
      }
 
-
-     suspend fun handlePlayerCollision(gameState: GameState): GameState {
-         val oldPlayer = gameState.player
-         oldPlayer.lives--
-         if (oldPlayer.lives > 0) {
-             return GameState(
-                 player = oldPlayer.copy(position = getPlayerStartPosition()),
-                 enemies = generateEnemies(gameState.level, oldPlayer.position).toMutableList(),
-                 collisionSquares = mutableListOf(),
-                 score = gameState.score,
-                 level = gameState.level
-             )
-         } else {
-             // Insert the current score, then query the top 10 scores so see if this is a new high score
-             withContext(Dispatchers.IO) { gameRepository.insertScore(Score(points = gameState.score)) }
-             val topScores = withContext(Dispatchers.IO) { gameRepository.getTopScores(10) }
-             if (topScores.any { it.points == gameState.score }) {
-                 // The current score is in the top 10
-
-                 // TODO: Add dialog for the user that they have a high score
-             }
-
-             return gameState.copy(player = oldPlayer)
-         }
-     }
-
-     private fun getPlayerStartPosition(): Position {
+     fun getPlayerStartPosition(): Position {
          return Position(ceil((GRID_WIDTH / 2).toDouble()).toInt(), ceil((GRID_HEIGHT / 2).toDouble()).toInt())
      }
 
@@ -243,7 +206,8 @@ class GameInteractor @Inject constructor(
         }
         return enemies
     }
+
      fun isWithinRadius(radius: Int, pos1: Position, pos2: Position): Boolean {
-        return Math.abs(pos1.x - pos2.x) <= radius && Math.abs(pos1.y - pos2.y) <= radius
+        return abs(pos1.x - pos2.x) <= radius && abs(pos1.y - pos2.y) <= radius
     }
 }

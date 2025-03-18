@@ -30,8 +30,8 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
         // Assuming GameState is obtained from the ViewModel
         val gameState = viewModel.gameState.observeAsState().value
         val topScores = viewModel.topScores.observeAsState()
+        val showEndOfGameDialog = viewModel.showEndOfGameDialog.observeAsState()
 
-        val showEndOfGameDialog = remember { mutableStateOf(false) }
 
         // Call destroy method of GameInteractor when GameScreen leaves the composition
         DisposableEffect(key1 = viewModel) {
@@ -40,25 +40,12 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
             }
         }
 
-        if (gameState?.player?.lives == 0) {
-            AlertDialog(
-                onDismissRequest = { navController.popBackStack() },
-                title = { Text(text = "Game Over") },
-                text = {
-                    Column {
-                        Text(text = "Top 10 Scores:")
-                        topScores.value?.forEachIndexed { index, score ->
-                            Text(text = "${index + 1}. ${score.points}")
-                        }
-                    }
-                },
-                confirmButton = {
-                    Button(onClick = {
-                        viewModel.startNewGame()
-                        showEndOfGameDialog.value = false // Close dialog when button is clicked
-                    }) {
-                        Text("New Game")
-                    }
+        if (showEndOfGameDialog.value == true) {
+            EndOfGameDialog(
+                topScores = topScores.value ?: emptyList(),
+                onDismiss = {
+                    viewModel.dismissEndOfGameDialog()
+                    viewModel.startNewGame()
                 }
             )
         }

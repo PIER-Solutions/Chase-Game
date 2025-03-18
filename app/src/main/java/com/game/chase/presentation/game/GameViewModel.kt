@@ -15,17 +15,20 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.game.chase.domain.game.GameInteractor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 interface GameViewModelInterface {
     val gameState: LiveData<GameState>
     val topScores: LiveData<List<Score>>
+    val showEndOfGameDialog: LiveData<Boolean>
     fun movePlayer(direction: Direction)
     fun teleportPlayer()
     fun useBomb()
-    fun resetLevel()
     fun startNewGame()
     fun saveScore(score: Int)
     fun fetchTopScores()
+    fun dismissEndOfGameDialog()
 }
 
 @HiltViewModel
@@ -37,6 +40,8 @@ class GameViewModel @Inject constructor(
     private val _gameState = MutableLiveData<GameState>()
     override val gameState: LiveData<GameState> = _gameState
     override val topScores: LiveData<List<Score>> = MutableLiveData()
+    private val _showEndOfGameDialog = MutableLiveData<Boolean>()
+    override val showEndOfGameDialog: LiveData<Boolean> = _showEndOfGameDialog
 
     init {
         startNewGame()
@@ -46,27 +51,75 @@ class GameViewModel @Inject constructor(
         gameInteractor.destroy()
     }
 
+    private suspend fun processGameState(newGameState: GameState) {
+        /*
+        Order of operations:
+        1. Player moves, teleports or uses bomb (then this method is called)
+        2. Enemies move
+        3. Detect collisions (also scores collisions)
+        4. Handle collisions
+        5. Update game state
+
+         */
+
+        val updatedEnemiesGameState = gameInteractor.updateEnemies(newGameState)
+        val nextGameState = gameInteractor.detectCollisions(updatedEnemiesGameState)
+
+        if (nextGameState.collisionSquares.contains(nextGameState.player.position)) {
+            val oldPlayer = nextGameState.player
+            oldPlayer.lives--
+            if (oldPlayer.lives > 0) {
+                // decrement a life and reset the level
+                val newState = GameState(
+                    player = oldPlayer.copy(position = gameInteractor.getPlayerStartPosition()),
+                    enemies = gameInteractor.generateEnemies(nextGameState.level, oldPlayer.position).toMutableList(),
+                    collisionSquares = mutableListOf(),
+                    score = nextGameState.score,
+                    level = nextGameState.level
+                )
+                //TODO do something with the new state
+                _gameState.value = newState
+            } else {
+                // Player has no lives left, save the score and end the game
+                withContext(Dispatchers.IO) { gameRepository.insertScore(Score(points = nextGameState.score)) }
+                _gameState.value = nextGameState.copy(player = oldPlayer)
+                fetchTopScores()
+                _showEndOfGameDialog.value = true
+            }
+        } else if (nextGameState.enemies.isEmpty()) {
+            _gameState.value = gameInteractor.nextLevel(nextGameState)
+        } else {
+            _gameState.value = nextGameState
+        }
+
+    }
+
     override fun movePlayer(direction: Direction) {
         viewModelScope.launch {
-            _gameState.value = gameInteractor.movePlayer(_gameState.value ?: return@launch, direction)
+            val oldGameState = _gameState.value ?: return@launch
+            val newGameState = gameInteractor.movePlayer(oldGameState, direction)
+
+            // Only update enemies if the player's position has changed
+            if (oldGameState.player.position != newGameState.player.position) {
+                processGameState(newGameState)
+            } else {
+                _gameState.value = newGameState
+            }
+
         }
     }
 
     override fun teleportPlayer() {
         viewModelScope.launch {
-            _gameState.value = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
+            val newGameState = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
+            processGameState(newGameState)
         }
     }
 
     override fun useBomb() {
         viewModelScope.launch {
-            _gameState.value = gameInteractor.useBomb(_gameState.value ?: return@launch)
-        }
-    }
-
-    override fun resetLevel() {
-        viewModelScope.launch {
-            _gameState.value = gameInteractor.handlePlayerCollision(_gameState.value ?: return@launch)
+            val newGameState = gameInteractor.useBomb(_gameState.value ?: return@launch)
+            processGameState(newGameState)
         }
     }
 
@@ -84,6 +137,10 @@ class GameViewModel @Inject constructor(
         viewModelScope.launch {
             (topScores as MutableLiveData).value = gameRepository.getTopScores(10)
         }
+    }
+
+    override fun dismissEndOfGameDialog() {
+        _showEndOfGameDialog.value = false // Implement the function here
     }
 }
 
@@ -107,6 +164,8 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
     )
     override val topScores: LiveData<List<Score>>
         get() = MutableLiveData()
+    override val showEndOfGameDialog: LiveData<Boolean>
+        get() = MutableLiveData()
 
     override fun movePlayer(direction: Direction) {
         // Mock implementation
@@ -120,10 +179,6 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
         // Mock implementation
     }
 
-    override fun resetLevel() {
-        // Mock implementation
-    }
-
     override fun startNewGame() {
         // Mock implementation
     }
@@ -133,6 +188,10 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
     }
 
     override fun fetchTopScores() {
+        // Mock implementation
+    }
+
+    override fun dismissEndOfGameDialog() {
         // Mock implementation
     }
 }
