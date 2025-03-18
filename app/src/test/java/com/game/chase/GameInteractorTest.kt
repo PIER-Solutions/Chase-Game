@@ -48,7 +48,6 @@ class GameInteractorTest {
     fun setup() {
         gameRepository = mock(GameRepository::class.java)
         positionGenerator = SpecificPositionGenerator(listOf(Position(0, 0), Position(1, 1), Position(2, 2)))
-//        gameInteractor = GameInteractor(gameRepository, positionGenerator)
 
         // Specify the behavior of gameRepository
         runBlocking {
@@ -280,49 +279,49 @@ class GameInteractorTest {
 
         assertEquals(initialGameState, resultGameState)
     }
-//    @Test
-//    fun testTeleportPlayer_DoesNotMovePlayerOntoEnemySquare() = runTest {
-//        //Arrange
-//        val enemyPosition = Position(1, 1)
-//        val expectedFinalPlayerPosition = Position(5, 5) // Must be far enough away from enemies to not cause a collision when they update
-//        val specificPositions = listOf(enemyPosition, expectedFinalPlayerPosition)
-//        positionGenerator = SpecificPositionGenerator(specificPositions)
-//        gameInteractor = GameInteractor(gameRepository, positionGenerator)
-//
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition, teleportUses = 1),
-//            enemies = mutableListOf(Enemy(enemyPosition)),
-//            collisionSquares = mutableListOf()
-//        )
-//
-//        //Act
-//        val resultGameState = gameInteractor.teleportPlayer(initialGameState)
-//
-//        //Assert
-//        assertNotEquals(defaultPlayerPosition, resultGameState.player.position) // Player moved
-//        assertNotEquals(enemyPosition, resultGameState.player.position) // Player is not on Enemy square
-//        assertEquals(expectedFinalPlayerPosition, resultGameState.player.position) // Player is on expected square
-//    }
-//    @Test
-//    fun testTeleportPlayer_DoesNotMovePlayerOntoCollisionSquare() = runTest {
-//        val collisionPosition = Position(1, 1)
-//        val expectedFinalPlayerPosition = Position(5, 5) // Must be far enough away from enemies to not cause a collision when they update
-//        val specificPositions = listOf(collisionPosition, expectedFinalPlayerPosition)
-//        positionGenerator = SpecificPositionGenerator(specificPositions)
-//        gameInteractor = GameInteractor(gameRepository, positionGenerator)
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition, teleportUses = 1),
-//            enemies = defaultEnemyList, // may need to update later to avoid collisions
-//            collisionSquares = mutableListOf(collisionPosition)
-//        )
-//
-//        val resultGameState = gameInteractor.teleportPlayer(initialGameState)
-//
-//        //Assert
-//        assertNotEquals(defaultPlayerPosition, resultGameState.player.position) // Player moved
-//        assertNotEquals(collisionPosition, resultGameState.player.position) // Player is not on Collision square
-//        assertEquals(expectedFinalPlayerPosition, resultGameState.player.position) // Player is on expected square
-//    }
+    @Test
+    fun testTeleportPlayer_DoesNotMovePlayerOntoEnemySquare() = runTest {
+        //Arrange
+        val enemyPosition = Position(1, 1)
+        val expectedFinalPlayerPosition = Position(5, 5) // Must be far enough away from enemies to not cause a collision when they update
+        val specificPositions = listOf(enemyPosition, expectedFinalPlayerPosition)
+        positionGenerator = SpecificPositionGenerator(specificPositions)
+        gameInteractor = GameInteractor(positionGenerator)
+
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition, teleportUses = 1),
+            enemies = mutableListOf(Enemy(enemyPosition)),
+            collisionSquares = mutableListOf()
+        )
+
+        //Act
+        val resultGameState = gameInteractor.teleportPlayer(initialGameState)
+
+        //Assert
+        assertNotEquals(defaultPlayerPosition, resultGameState.player.position) // Player moved
+        assertNotEquals(enemyPosition, resultGameState.player.position) // Player is not on Enemy square
+        assertEquals(expectedFinalPlayerPosition, resultGameState.player.position) // Player is on expected square
+    }
+    @Test
+    fun testTeleportPlayer_DoesNotMovePlayerOntoCollisionSquare() = runTest {
+        val collisionPosition = Position(1, 1)
+        val expectedFinalPlayerPosition = Position(5, 5) // Must be far enough away from enemies to not cause a collision when they update
+        val specificPositions = listOf(collisionPosition, expectedFinalPlayerPosition)
+        positionGenerator = SpecificPositionGenerator(specificPositions)
+        gameInteractor = GameInteractor(positionGenerator)
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition, teleportUses = 1),
+            enemies = defaultEnemyList, // may need to update later to avoid collisions
+            collisionSquares = mutableListOf(collisionPosition)
+        )
+
+        val resultGameState = gameInteractor.teleportPlayer(initialGameState)
+
+        //Assert
+        assertNotEquals(defaultPlayerPosition, resultGameState.player.position) // Player moved
+        assertNotEquals(collisionPosition, resultGameState.player.position) // Player is not on Collision square
+        assertEquals(expectedFinalPlayerPosition, resultGameState.player.position) // Player is on expected square
+    }
     @Test
     fun testTeleportPlayer_UpdateEnemiesIsCalledAfterTeleport() = runTest {
         val spyInteractor = spy(gameInteractor)
@@ -614,24 +613,6 @@ class GameInteractorTest {
 
     //region detectCollision Tests
 
-//    @Test
-//    fun testDetectCollisions_CallsHandlePlayerCollisionOnPlayerCollision() = runTest {
-//        val enemy1 = Enemy(Position(defaultPlayerPosition.x, defaultPlayerPosition.y))
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition),
-//            enemies = mutableListOf(enemy1),
-//            collisionSquares = mutableListOf()
-//        )
-//        // Create a spy of gameInteractor
-//        val spyGameInteractor = spy(gameInteractor)
-//
-//        // Act
-//        spyGameInteractor.handlePlayerCollision(initialGameState)
-//
-//        // Assert that handlePlayerCollision was called
-//        verify(spyGameInteractor).handlePlayerCollision(any())
-//    }
-
     @Test
     fun testDetectCollisions_RemovesEnemyOnCollisionSquare() = runTest {
         val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
@@ -788,97 +769,7 @@ class GameInteractorTest {
 
     //endregion
 
-    //region handlePlayerCollision Tests
-//    @Test
-//    fun testHandlePlayerCollision_DecreasesPlayerLives() = runTest {
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition, lives = 3),
-//            enemies = defaultEnemyList,
-//            collisionSquares = mutableListOf()
-//        )
-//
-//        val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
-//
-//        assertEquals(2, resultGameState.player.lives)
-//    }
-//
-//    @Test
-//    fun testHandlePlayerCollision_ResetsPlayerPosition() = runTest {
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition),
-//            enemies = defaultEnemyList,
-//            collisionSquares = mutableListOf()
-//        )
-//
-//        val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
-//
-//        assertEquals(Position(ceil((GRID_WIDTH / 2).toDouble()).toInt(), ceil((GRID_HEIGHT / 2).toDouble()).toInt()), resultGameState.player.position)
-//    }
-//
-//    @Test
-//    fun testHandlePlayerCollision_CallsGenerateEnemiesWhenPlayerHasLivesRemaining() = runTest {
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition, lives = 3),
-//            enemies = defaultEnemyList,
-//            collisionSquares = mutableListOf()
-//        )
-//        val spyInteractor = spy(gameInteractor)
-//
-//        //Act
-//        spyInteractor.handlePlayerCollision(initialGameState)
-//
-//        //Assert
-//        verify(spyInteractor).generateEnemies(any(), any())
-//    }
-//
-//    @Test
-//    fun testHandlePlayerCollision_ResetsCollisionSquares() = runTest {
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition),
-//            enemies = defaultEnemyList,
-//            collisionSquares = mutableListOf(Position(1, 1), Position(2, 2))
-//        )
-//
-//        val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
-//
-//        assertTrue(resultGameState.collisionSquares.isEmpty())
-//    }
-//
-//    @Test
-//    fun testHandlePlayerCollision_KeepsScoreAndLevel() = runTest {
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition),
-//            enemies = defaultEnemyList,
-//            collisionSquares = mutableListOf(),
-//            score = 100,
-//            level = 5
-//        )
-//
-//        val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
-//
-//        assertEquals(100, resultGameState.score)
-//        assertEquals(5, resultGameState.level)
-//    }
-//
-//    @Test
-//    fun testHandlePlayerCollision_CallsInsertScoreWithCorrectScoreWhenNoLivesRemain() = runTest {
-//        // Arrange
-//        val initialScore = 100
-//        val initialGameState = GameState(
-//            player = Player(defaultPlayerPosition, lives = 0), // Player has no lives
-//            enemies = defaultEnemyList,
-//            collisionSquares = mutableListOf(),
-//            score = initialScore // Set the initial score
-//        )
-//        val gameInteractor = GameInteractor(gameRepository, positionGenerator)
-//
-//        // Act
-//        gameInteractor.handlePlayerCollision(initialGameState)
-//
-//        // Assert
-//        verify(gameRepository).insertScore(argThat { score -> score.points == initialScore}) // Verify with the correct score (but ignore other fields in the object)
-//    }
-    //endregion
+
 
     //region nextLevelTests
     @Test
