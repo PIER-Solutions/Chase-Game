@@ -21,6 +21,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.game.chase.domain.game.GameState
@@ -28,11 +29,13 @@ import com.game.chase.domain.game.GameState
 @Composable
 fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, viewModel: GameViewModelInterface = hiltViewModel<GameViewModel>()) {
     AppTheme {
-        // Assuming GameState is obtained from the ViewModel
+        // Observe LiveData from the viewModel
         val gameState = viewModel.gameState.observeAsState().value
         val topScores = viewModel.topScores.observeAsState()
         val showEndOfGameDialog = viewModel.showEndOfGameDialog.observeAsState()
 
+        // Observe StateFlow from the ViewModel
+        val joke = (viewModel as GameViewModel).joke.collectAsState().value
 
         // Call destroy method of GameInteractor when GameScreen leaves the composition
         DisposableEffect(key1 = viewModel) {
@@ -45,6 +48,7 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
             EndOfGameDialog(
                 score = gameState?.score?.toString() ?: "",
                 topScores = topScores.value ?: emptyList(),
+                joke = joke,
                 onDismiss = {
                     viewModel.dismissEndOfGameDialog()
                     viewModel.startNewGame()

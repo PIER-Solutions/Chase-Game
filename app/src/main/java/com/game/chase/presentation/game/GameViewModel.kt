@@ -5,8 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.chase.core.constants.Direction
+import com.game.chase.data.db.JokeRepository
 import com.game.chase.data.db.impl.DefaultGameRepository
 import com.game.chase.data.entity.Enemy
+import com.game.chase.data.entity.Joke
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
 import com.game.chase.data.entity.Score
@@ -16,6 +18,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.game.chase.domain.game.GameInteractor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
 interface GameViewModelInterface {
@@ -29,11 +33,13 @@ interface GameViewModelInterface {
     fun saveScore(score: Int)
     fun fetchTopScores()
     fun dismissEndOfGameDialog()
+    fun fetchJoke()
 }
 
 @HiltViewModel
 class GameViewModel @Inject constructor(
     private val gameRepository: DefaultGameRepository,
+    private val jokeRepository: JokeRepository,
     private val gameInteractor: GameInteractor
 ) : ViewModel(), GameViewModelInterface {
 
@@ -42,6 +48,9 @@ class GameViewModel @Inject constructor(
     override val topScores: LiveData<List<Score>> = MutableLiveData()
     private val _showEndOfGameDialog = MutableLiveData<Boolean>()
     override val showEndOfGameDialog: LiveData<Boolean> = _showEndOfGameDialog
+
+    private val _joke = MutableStateFlow<Joke?>(null)
+    val joke: StateFlow<Joke?> = _joke
 
     init {
         startNewGame()
@@ -142,6 +151,9 @@ class GameViewModel @Inject constructor(
 
     override fun startNewGame() {
         _gameState.value = gameInteractor.startNewGame()
+        viewModelScope.launch {
+            fetchJoke()
+        }
     }
 
     override fun saveScore(score: Int) {
@@ -158,6 +170,15 @@ class GameViewModel @Inject constructor(
 
     override fun dismissEndOfGameDialog() {
         _showEndOfGameDialog.value = false // Implement the function here
+    }
+
+    override fun fetchJoke() {
+        viewModelScope.launch {
+            val joke = withContext(Dispatchers.IO) {
+                jokeRepository.getRandomJoke()
+            }
+            _joke.value = joke
+        }
     }
 }
 
@@ -209,6 +230,10 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
     }
 
     override fun dismissEndOfGameDialog() {
+        // Mock implementation
+    }
+
+    override fun fetchJoke() {
         // Mock implementation
     }
 }

@@ -14,14 +14,17 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.game.chase.data.entity.Joke
 import com.game.chase.data.entity.Score
 
 @Composable
 fun EndOfGameDialog(
     score: String,
     topScores: List<Score>,
+    joke: Joke?,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -45,6 +48,24 @@ fun EndOfGameDialog(
                     items(topScores) { score ->
                         ScoreItem(score = score)
                     }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                if (joke != null) {
+                    Text(
+                        "Here's a joke for you:",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        joke.setup,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        joke.punchline,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         },
@@ -74,6 +95,7 @@ fun EndOfGameDialogPreview() {
     EndOfGameDialog(
         score = "12345",
         topScores = topScores,
+        joke = Joke("setup", "setup", "punchline"),
         onDismiss = {} // Dummy implementation
     )
 }

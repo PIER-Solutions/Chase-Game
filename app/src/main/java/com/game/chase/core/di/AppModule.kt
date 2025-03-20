@@ -5,8 +5,11 @@ import android.content.Context
 import androidx.room.Room
 import com.game.chase.data.db.GameDatabase
 import com.game.chase.data.db.GameRepository
+import com.game.chase.data.db.JokeApi
+import com.game.chase.data.db.JokeRepository
 import com.game.chase.data.db.impl.DefaultGameRepository
 import com.game.chase.data.db.ScoreDao
+import com.game.chase.data.db.impl.DefaultJokeRepository
 import com.game.chase.domain.game.util.PositionGenerator
 import com.game.chase.domain.game.util.impl.RandomPositionGenerator
 import dagger.Binds
@@ -15,6 +18,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 @Module
@@ -24,6 +31,10 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindGameRepository(gameRepository: DefaultGameRepository): GameRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindJokeRepository(jokeRepository: DefaultJokeRepository): JokeRepository
 
     companion object {
         @Provides
@@ -50,5 +61,33 @@ abstract class AppModule {
         fun providePositionGenerator(): PositionGenerator {
             return RandomPositionGenerator()
         }
+
+        @Provides
+        @Singleton
+        fun provideJokeApi(okHttpClient: OkHttpClient): JokeApi {
+            return Retrofit.Builder()
+                .baseUrl("https://official-joke-api.appspot.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(okHttpClient)
+                .build()
+                .create(JokeApi::class.java)
+        }
+
+        @Provides
+        @Singleton
+        fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
+            return OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build()
+        }
+
+        @Provides
+        @Singleton
+        fun provideLoggingInterceptor(): HttpLoggingInterceptor {
+            return HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+        }
+
     }
 }
