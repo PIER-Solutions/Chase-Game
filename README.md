@@ -1,74 +1,57 @@
 
+### Overview
+This lightweight app serves as a testing ground for experimenting with new Android framework features. As a result, some suboptimal components or code structures may be intentionally used for exploration, and certain shortcuts may be taken since this is not intended for production.
 ### Background
-The game is inspired by the classic "Daleks" game. The objective is to destroy Daleks by making them collide with each other or using bombs. Daleks move towards the player every turn, and the player can move, teleport, or use bombs to avoid and destroy Daleks.
+The game is inspired by a mini-game based on the classic "Daleks" game. The objective is to destroy Enemies by making them collide with each other or using bombs. Daleks move towards the player every turn, and the player can move, teleport, or use bombs to avoid and destroy Daleks.
 
-### Requirements
+Inspiration:
+- https://furfighters.fandom.com/wiki/Bear_Attack
+- https://www.isaacsukin.com/sites/daleks/index.html
 
-#### Must Have:
+
+
+#### Gameplay:
 - **Grid-Based Gameplay:**
   - Display a grid representing the game board.
-  - Track player position, enemy tokens, and collision squares.
   - Control module below the grid for player actions.
 
 - **Player and Enemy Mechanics:**
   - Player can move up, down, left, or right.
-  - Enemies move one square closer to the player after each move.
+  - Enemies move one square closer to the player after each move (including diagonal).
   - Collisions between enemies turn them into collision squares.
+  - Enemies should not spawn within 2 tiles of the player.
 
 - **Level and Score Management:**
-  - Track player's score.
-  - Levels increase by one enemy each time all enemies are destroyed.
+  - Each new level starts with one additional enemy; collision squares are removed.
   - Reset board to the initial state of the level after player collides with an enemy.
 
 - **Health and Special Actions:**
   - Player has 3 lives.
   - Teleport button (3 uses) relocates player to a random square.
   - Bomb button (3 uses) turns enemies in a 2-square radius into collision squares.
+  - Player earns additional teleports and bombs by progressing through levels.
 
-#### Should Have:
-- Enemies should not spawn within 2 tiles of the player.
-- Visual indication of lives remaining.
-
-#### Could Have:
+#### Possible future additions:
 - Animations for player and enemy movements.
 - Sound effects for movements and actions.
-
-#### Won't Have:
-- Multiplayer functionality.
+- Alternate game modes
+- A back-end to allow leaderboards
 
 ### Scoring
 - Start with 3 enemies at level 1.
 - Score:
-  - 1 point for every Dalek that runs into a pile or shielded player.
-  - 1 point for every Dalek that is bombed.
-  - 3 points for two Daleks colliding and creating a pile.
-  - 5 points for three Daleks colliding and creating a pile.
-  - Additional points for completing each level.
+  + 1 point for every Enemy that runs into a pile or shielded player.
+  + 1 point for every Enemy that is bombed.
+  + 3 points for two Enemies colliding and creating a pile.
+  + 5 points for three Enemies colliding and creating a pile.
+  + Additional points for completing each level.
 
-### Additional Features
-- Button for starting a new game.
-- Mechanism for keeping track of scores via a Room database.
+### Components
+- Room database, Jetpack Compose
 
+### Game theme link:
+http://material-foundation.github.io?primary=%23C5B6A1&bodyFont=Acme&displayFont=Acme&colorMatch=true
 ----------------
-
-Architectural Overview
-Architecture Components:
-Model Layer:
-
-Data classes for Player, Enemy, Position, and GameState.
-Repository for game logic and data management.
-ViewModel Layer:
-
-ViewModel to manage UI-related data in a lifecycle-conscious way.
-View Layer:
-
-Composable functions to render the game grid and control module using Jetpack Compose.
-Dependency Injection:
-
-Hilt for providing dependencies.
-
 
 -----
 
-https://furfighters.fandom.com/wiki/Bear_Attack
-https://www.isaacsukin.com/sites/daleks/index.html

@@ -1,15 +1,17 @@
 package com.game.chase
 
 import com.game.chase.core.constants.Direction
-import com.game.chase.core.constants.GRID_SIZE
-import com.game.chase.data.Enemy
-import com.game.chase.data.GameRepository
-import com.game.chase.data.Player
-import com.game.chase.data.Position
+import com.game.chase.core.constants.GRID_HEIGHT
+import com.game.chase.core.constants.GRID_WIDTH
+import com.game.chase.data.db.GameRepository
+import com.game.chase.data.entity.Enemy
+import com.game.chase.data.entity.Player
+import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameInteractor
 import com.game.chase.domain.game.GameState
 import com.game.chase.domain.game.util.PositionGenerator
 import com.game.chase.domain.game.util.impl.SpecificPositionGenerator
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -19,10 +21,13 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.atLeast
+import org.mockito.kotlin.check
+import org.mockito.kotlin.whenever
+import kotlin.math.ceil
 
 class GameInteractorTest {
     /*
@@ -33,7 +38,7 @@ class GameInteractorTest {
     private lateinit var positionGenerator: PositionGenerator
     private lateinit var gameInteractor: GameInteractor
 
-    private val defaultPlayerPosition = Position(GRID_SIZE / 2, GRID_SIZE / 2)
+    private val defaultPlayerPosition = Position(ceil((GRID_WIDTH / 2).toDouble()).toInt(), ceil((GRID_HEIGHT / 2).toDouble()).toInt())
     private val defaultEnemyList =  mutableListOf(
         Enemy(Position(defaultPlayerPosition.x + 3, defaultPlayerPosition.y)),
         Enemy(Position(defaultPlayerPosition.x + 5, defaultPlayerPosition.y - 3)),
@@ -43,7 +48,12 @@ class GameInteractorTest {
     fun setup() {
         gameRepository = mock(GameRepository::class.java)
         positionGenerator = SpecificPositionGenerator(listOf(Position(0, 0), Position(1, 1), Position(2, 2)))
-        gameInteractor = GameInteractor(gameRepository, positionGenerator)
+
+        // Specify the behavior of gameRepository
+        runBlocking {
+            whenever(gameRepository.insertScore(any())).thenReturn(Unit)
+            whenever(gameRepository.getTopScores(any())).thenReturn(emptyList())
+        }
     }
 
     //region movePlayer Tests
@@ -166,7 +176,7 @@ class GameInteractorTest {
     @Test
     fun testMovePlayer_OutOfBounds_Down() = runTest {
         // Arrange
-        val initialPlayerPos = Position(GRID_SIZE,GRID_SIZE)
+        val initialPlayerPos = Position(GRID_WIDTH, GRID_HEIGHT)
         val initialGameState = GameState(
             player = Player(initialPlayerPos),
             enemies = mutableListOf(
@@ -184,7 +194,7 @@ class GameInteractorTest {
     @Test
     fun testMovePlayer_OutOfBounds_Right() = runTest {
         // Arrange
-        val initialPlayerPos = Position(GRID_SIZE,GRID_SIZE)
+        val initialPlayerPos = Position(GRID_WIDTH, GRID_HEIGHT)
         val initialGameState = GameState(
             player = Player(initialPlayerPos),
             enemies = mutableListOf(
@@ -276,7 +286,7 @@ class GameInteractorTest {
         val expectedFinalPlayerPosition = Position(5, 5) // Must be far enough away from enemies to not cause a collision when they update
         val specificPositions = listOf(enemyPosition, expectedFinalPlayerPosition)
         positionGenerator = SpecificPositionGenerator(specificPositions)
-        gameInteractor = GameInteractor(gameRepository, positionGenerator)
+        gameInteractor = GameInteractor(positionGenerator)
 
         val initialGameState = GameState(
             player = Player(defaultPlayerPosition, teleportUses = 1),
@@ -298,7 +308,7 @@ class GameInteractorTest {
         val expectedFinalPlayerPosition = Position(5, 5) // Must be far enough away from enemies to not cause a collision when they update
         val specificPositions = listOf(collisionPosition, expectedFinalPlayerPosition)
         positionGenerator = SpecificPositionGenerator(specificPositions)
-        gameInteractor = GameInteractor(gameRepository, positionGenerator)
+        gameInteractor = GameInteractor(positionGenerator)
         val initialGameState = GameState(
             player = Player(defaultPlayerPosition, teleportUses = 1),
             enemies = defaultEnemyList, // may need to update later to avoid collisions
@@ -503,6 +513,29 @@ class GameInteractorTest {
         verify(spyInteractor).nextLevel(any())
     }
 
+    @Test
+    fun testUseBomb_AddsScoreForEnemyBombed() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition,  bombUses = 2),
+            enemies = mutableListOf(enemy1),
+            collisionSquares = mutableListOf(),
+            score = 0
+        )
+
+        // Create a spy of gameInteractor
+        val spyInteractor = spy(gameInteractor)
+
+        // Act
+        spyInteractor.useBomb(initialGameState)
+
+        // Assert
+        // Verify that updateEnemies was called with a GameState where score = 1
+        verify(spyInteractor).updateEnemies(check<GameState> { gameState ->
+            assertEquals(1, gameState.score) // This works even though a new level is started form lack of enemies
+        })
+    }
+
     //endregion
 
     //region updateEnemies Tests
@@ -579,24 +612,6 @@ class GameInteractorTest {
     //endregion
 
     //region detectCollision Tests
-
-    @Test
-    fun testDetectCollisions_CallsHandlePlayerCollisionOnPlayerCollision() = runTest {
-        val enemy1 = Enemy(Position(defaultPlayerPosition.x, defaultPlayerPosition.y))
-        val initialGameState = GameState(
-            player = Player(defaultPlayerPosition),
-            enemies = mutableListOf(enemy1),
-            collisionSquares = mutableListOf()
-        )
-        // Create a spy of gameInteractor
-        val spyGameInteractor = spy(gameInteractor)
-
-        // Act
-        spyGameInteractor.handlePlayerCollision(initialGameState)
-
-        // Assert that handlePlayerCollision was called
-        verify(spyGameInteractor).handlePlayerCollision(any())
-    }
 
     @Test
     fun testDetectCollisions_RemovesEnemyOnCollisionSquare() = runTest {
@@ -685,96 +700,76 @@ class GameInteractorTest {
         verify(spyInteractor).nextLevel(any())
     }
 
+    @Test
+    fun testDetectCollisions_AddsScoreForEnemyRunningIntoCollisionSquare() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val survivingEnemy = Enemy(Position(0, 0)) // Keeps level from completing; simpler than spying everything
+        val collisionSquare = Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y)
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition),
+            enemies = mutableListOf(enemy1, survivingEnemy),
+            collisionSquares = mutableListOf(collisionSquare),
+            score = 0
+        )
+
+        val updatedGameState = gameInteractor.detectCollisions(initialGameState)
+
+        assertEquals(1, updatedGameState.score)
+    }
+
+    @Test
+    fun testDetectCollisions_AddsScoreForTwoEnemiesColliding() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy2 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val survivingEnemy = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition),
+            enemies = mutableListOf(enemy1, enemy2, survivingEnemy),
+            collisionSquares = mutableListOf()
+        )
+
+        val updatedGameState = gameInteractor.detectCollisions(initialGameState)
+
+        assertEquals(3, updatedGameState.score)
+    }
+
+    @Test
+    fun testDetectCollisions_AddsScoreForThreeEnemiesColliding() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy2 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy3 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val survivingEnemy = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition),
+            enemies = mutableListOf(enemy1, enemy2, enemy3, survivingEnemy),
+            collisionSquares = mutableListOf()
+        )
+
+        val updatedGameState = gameInteractor.detectCollisions(initialGameState)
+
+        assertEquals(5, updatedGameState.score)
+    }
+
+    @Test
+    fun testDetectCollisions_AddsScoreForOtherEnemiesCollidingWhenPlayerIsCollided() = runTest {
+        val enemy1 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy2 = Enemy(Position(defaultPlayerPosition.x + 1, defaultPlayerPosition.y))
+        val enemy3 = Enemy(Position(defaultPlayerPosition.x, defaultPlayerPosition.y))
+        val survivingEnemy = Enemy(Position(0, 0))
+        val initialGameState = GameState(
+            player = Player(defaultPlayerPosition),
+            enemies = mutableListOf(enemy1, enemy2, enemy3, survivingEnemy),
+            collisionSquares = mutableListOf()
+        )
+
+        val updatedGameState = gameInteractor.detectCollisions(initialGameState)
+
+        assertEquals(3, updatedGameState.score)
+    }
+
     //endregion
 
-    //region handlePlayerCollision Tests
-    @Test
-    fun testHandlePlayerCollision_DecreasesPlayerLives() = runTest {
-        val initialGameState = GameState(
-            player = Player(defaultPlayerPosition, lives = 3),
-            enemies = defaultEnemyList,
-            collisionSquares = mutableListOf()
-        )
 
-        val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
-
-        assertEquals(2, resultGameState.player.lives)
-    }
-
-    @Test
-    fun testHandlePlayerCollision_ResetsPlayerPosition() = runTest {
-        val initialGameState = GameState(
-            player = Player(defaultPlayerPosition),
-            enemies = defaultEnemyList,
-            collisionSquares = mutableListOf()
-        )
-
-        val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
-
-        assertEquals(Position(GRID_SIZE / 2, GRID_SIZE / 2), resultGameState.player.position)
-    }
-
-    @Test
-    fun testHandlePlayerCollision_CallsGenerateEnemiesWhenPlayerHasLivesRemaining() = runTest {
-        val initialGameState = GameState(
-            player = Player(defaultPlayerPosition, lives = 3),
-            enemies = defaultEnemyList,
-            collisionSquares = mutableListOf()
-        )
-        val spyInteractor = spy(gameInteractor)
-
-        //Act
-        spyInteractor.handlePlayerCollision(initialGameState)
-
-        //Assert
-        verify(spyInteractor).generateEnemies(any(), any())
-    }
-
-    @Test
-    fun testHandlePlayerCollision_ResetsCollisionSquares() = runTest {
-        val initialGameState = GameState(
-            player = Player(defaultPlayerPosition),
-            enemies = defaultEnemyList,
-            collisionSquares = mutableListOf(Position(1, 1), Position(2, 2))
-        )
-
-        val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
-
-        assertTrue(resultGameState.collisionSquares.isEmpty())
-    }
-
-    @Test
-    fun testHandlePlayerCollision_KeepsScoreAndLevel() = runTest {
-        val initialGameState = GameState(
-            player = Player(defaultPlayerPosition),
-            enemies = defaultEnemyList,
-            collisionSquares = mutableListOf(),
-            score = 100,
-            level = 5
-        )
-
-        val resultGameState = gameInteractor.handlePlayerCollision(initialGameState)
-
-        assertEquals(100, resultGameState.score)
-        assertEquals(5, resultGameState.level)
-    }
-
-    @Test
-    fun testHandlePlayerCollision_CallsStartNewGameWhenNoLivesRemain() = runTest {
-        val initialGameState = GameState(
-            player = Player(defaultPlayerPosition, lives = 1),
-            enemies = defaultEnemyList,
-            collisionSquares = mutableListOf()
-        )
-        val spyInteractor = spy(gameInteractor)
-
-        //Act
-        spyInteractor.handlePlayerCollision(initialGameState)
-
-        //Assert
-        verify(spyInteractor).startNewGame()
-    }
-    //endregion
 
     //region nextLevelTests
     @Test
@@ -801,7 +796,7 @@ class GameInteractorTest {
 
         val resultGameState = gameInteractor.nextLevel(initialGameState)
 
-        assertEquals(Position(GRID_SIZE / 2, GRID_SIZE / 2), resultGameState.player.position)
+        assertEquals(Position(ceil((GRID_WIDTH / 2).toDouble()).toInt(), ceil((GRID_HEIGHT / 2).toDouble()).toInt()), resultGameState.player.position)
     }
 
     @Test
@@ -845,17 +840,25 @@ class GameInteractorTest {
 
     @Test
     fun testNextLevel_KeepsScore() = runTest {
+        val initialScore = 100
+        val initialLevel = 1
         val initialGameState = GameState(
             player = Player(defaultPlayerPosition),
             enemies = defaultEnemyList,
             collisionSquares = mutableListOf(),
-            score = 100
+            score = initialScore,
+            level = initialLevel
         )
 
         val resultGameState = gameInteractor.nextLevel(initialGameState)
 
-        assertEquals(100, resultGameState.score)
+        val expectedScore = initialScore + (initialLevel * 3)
+        assertEquals(expectedScore, resultGameState.score)
     }
+
+
+
+
     //endregion
 
     //region startNewGame Tests
