@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.game.chase.domain.game.GameState
 
 @Composable
 fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, viewModel: GameViewModelInterface = hiltViewModel<GameViewModel>()) {
@@ -42,6 +43,7 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
 
         if (showEndOfGameDialog.value == true) {
             EndOfGameDialog(
+                score = gameState?.score?.toString() ?: "",
                 topScores = topScores.value ?: emptyList(),
                 onDismiss = {
                     viewModel.dismissEndOfGameDialog()

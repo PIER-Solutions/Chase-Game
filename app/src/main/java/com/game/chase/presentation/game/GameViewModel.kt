@@ -119,13 +119,11 @@ class GameViewModel @Inject constructor(
     override fun teleportPlayer() {
         viewModelScope.launch {
             val oldGameState = _gameState.value ?: return@launch
-            val newGameState = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
 
             // Only update enemies if the player's position has changed
-            if (oldGameState.player.position != newGameState.player.position) {
+            if (oldGameState.player.teleportUses > 0) {
+                val newGameState = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
                 processGameState(newGameState)
-            } else {
-                _gameState.value = newGameState
             }
         }
     }
@@ -133,13 +131,11 @@ class GameViewModel @Inject constructor(
     override fun useBomb() {
         viewModelScope.launch {
             val oldGameState = _gameState.value ?: return@launch
-            val newGameState = gameInteractor.useBomb(_gameState.value ?: return@launch)
 
             // Only update enemies if the player's position has changed
-            if (oldGameState.player.position != newGameState.player.position) {
+            if (oldGameState.player.bombUses > 0) {
+                val newGameState = gameInteractor.useBomb(_gameState.value ?: return@launch)
                 processGameState(newGameState)
-            } else {
-                _gameState.value = newGameState
             }
         }
     }
