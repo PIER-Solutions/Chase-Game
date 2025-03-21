@@ -1,6 +1,6 @@
-package com.game.chase.data.db
+package com.game.chase.data.game
 
-import com.game.chase.data.entity.Score
+import com.game.chase.data.game.db.model.Score
 
 interface GameRepository {
     suspend fun insertScore(score: Score)

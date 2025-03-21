@@ -3,13 +3,15 @@ package com.game.chase.core.di
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
-import com.game.chase.data.db.GameDatabase
-import com.game.chase.data.db.GameRepository
-import com.game.chase.data.db.JokeApi
-import com.game.chase.data.db.JokeRepository
-import com.game.chase.data.db.impl.DefaultGameRepository
-import com.game.chase.data.db.ScoreDao
-import com.game.chase.data.db.impl.DefaultJokeRepository
+import com.game.chase.data.game.db.GameDatabase
+import com.game.chase.data.game.GameRepository
+import com.game.chase.data.joke.api.JokeApi
+import com.game.chase.data.joke.db.JokeDao
+import com.game.chase.data.joke.db.JokeDatabase
+import com.game.chase.data.joke.JokeRepository
+import com.game.chase.data.game.impl.DefaultGameRepository
+import com.game.chase.data.game.db.ScoreDao
+import com.game.chase.data.joke.impl.DefaultJokeRepository
 import com.game.chase.domain.game.util.PositionGenerator
 import com.game.chase.domain.game.util.impl.RandomPositionGenerator
 import dagger.Binds
@@ -27,6 +29,18 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AppModule {
+
+    /*
+        @Binds vs @Provides example:
+
+        @Binds (Interface to Implementation): If JokeRepository is an interface and DefaultJokeRepository
+        is its concrete implementation, and you want to use DefaultJokeRepository in all cases, then the
+        @Binds method is likely the correct approach.
+
+        @Provides (Custom Creation): If you need to create JokeRepository with specific dependencies
+        (JokeDao, JokeApi) and potentially perform some custom logic during creation, then the @Provides
+        method is the correct choice.
+     */
 
     @Binds
     @Singleton
@@ -55,6 +69,20 @@ abstract class AppModule {
         @Provides
         @Singleton
         fun provideGameRepository(scoreDao: ScoreDao): DefaultGameRepository = DefaultGameRepository(scoreDao)
+
+        @Provides
+        @Singleton
+        fun provideJokeDatabase(app: Application): JokeDatabase {
+            return Room.databaseBuilder(app, JokeDatabase::class.java, "joke_db")
+                .createFromAsset("joke_db")
+                .build()
+        }
+
+        @Provides
+        @Singleton
+        fun provideJokeDao(db: JokeDatabase): JokeDao {
+            return db.jokeDao()
+        }
 
         @Provides
         @Singleton

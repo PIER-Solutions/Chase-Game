@@ -18,8 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.game.chase.data.entity.Joke
-import com.game.chase.data.entity.Score
+import com.game.chase.data.joke.Joke
+import com.game.chase.data.game.db.model.Score
 
 @Composable
 fun EndOfGameDialog(

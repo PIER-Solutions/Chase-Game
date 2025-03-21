@@ -1,11 +1,11 @@
-package com.game.chase.data.db
+package com.game.chase.data.game.db
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.game.chase.data.entity.Score
+import com.game.chase.data.game.db.model.Score
 
 @Dao
 interface ScoreDao {

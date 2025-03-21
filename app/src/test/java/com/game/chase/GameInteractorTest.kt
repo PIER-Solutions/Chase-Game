@@ -3,10 +3,11 @@ package com.game.chase
 import com.game.chase.core.constants.Direction
 import com.game.chase.core.constants.GRID_HEIGHT
 import com.game.chase.core.constants.GRID_WIDTH
-import com.game.chase.data.db.GameRepository
+import com.game.chase.data.game.GameRepository
 import com.game.chase.data.entity.Enemy
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
+import com.game.chase.data.joke.JokeRepository
 import com.game.chase.domain.game.GameInteractor
 import com.game.chase.domain.game.GameState
 import com.game.chase.domain.game.util.PositionGenerator
@@ -23,7 +24,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
-import org.mockito.kotlin.argThat
 import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.check
 import org.mockito.kotlin.whenever
@@ -35,6 +35,7 @@ class GameInteractorTest {
      */
 
     private lateinit var gameRepository: GameRepository
+    private lateinit var jokeRepository: JokeRepository
     private lateinit var positionGenerator: PositionGenerator
     private lateinit var gameInteractor: GameInteractor
 
@@ -47,6 +48,7 @@ class GameInteractorTest {
     @Before
     fun setup() {
         gameRepository = mock(GameRepository::class.java)
+        jokeRepository = mock(JokeRepository::class.java)
         positionGenerator = SpecificPositionGenerator(listOf(Position(0, 0), Position(1, 1), Position(2, 2)))
 
         // Specify the behavior of gameRepository
@@ -286,7 +288,7 @@ class GameInteractorTest {
         val expectedFinalPlayerPosition = Position(5, 5) // Must be far enough away from enemies to not cause a collision when they update
         val specificPositions = listOf(enemyPosition, expectedFinalPlayerPosition)
         positionGenerator = SpecificPositionGenerator(specificPositions)
-        gameInteractor = GameInteractor(positionGenerator)
+        gameInteractor = GameInteractor(positionGenerator, gameRepository, jokeRepository)
 
         val initialGameState = GameState(
             player = Player(defaultPlayerPosition, teleportUses = 1),
@@ -308,7 +310,7 @@ class GameInteractorTest {
         val expectedFinalPlayerPosition = Position(5, 5) // Must be far enough away from enemies to not cause a collision when they update
         val specificPositions = listOf(collisionPosition, expectedFinalPlayerPosition)
         positionGenerator = SpecificPositionGenerator(specificPositions)
-        gameInteractor = GameInteractor(positionGenerator)
+        gameInteractor = GameInteractor(positionGenerator, gameRepository, jokeRepository)
         val initialGameState = GameState(
             player = Player(defaultPlayerPosition, teleportUses = 1),
             enemies = defaultEnemyList, // may need to update later to avoid collisions

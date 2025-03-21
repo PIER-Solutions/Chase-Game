@@ -1,8 +1,8 @@
-package com.game.chase.data.entity
+package com.game.chase.data.joke.api.model
 
 import com.google.gson.annotations.SerializedName
 
-data class Joke(
+data class ApiJoke(
     @SerializedName("type")
     val type: String,
 

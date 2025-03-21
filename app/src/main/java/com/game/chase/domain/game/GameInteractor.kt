@@ -3,13 +3,13 @@ package com.game.chase.domain.game
 import com.game.chase.core.constants.Direction
 import com.game.chase.core.constants.GRID_HEIGHT
 import com.game.chase.core.constants.GRID_WIDTH
-import com.game.chase.data.db.GameRepository
-import com.game.chase.data.db.JokeRepository
+import com.game.chase.data.game.GameRepository
+import com.game.chase.data.joke.JokeRepository
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
 import com.game.chase.data.entity.Enemy
-import com.game.chase.data.entity.Joke
-import com.game.chase.data.entity.Score
+import com.game.chase.data.joke.Joke
+import com.game.chase.data.game.db.model.Score
 import com.game.chase.domain.game.util.PositionGenerator
 import kotlinx.coroutines.CoroutineScope
 import java.util.Random

@@ -1,8 +1,8 @@
-package com.game.chase.data.db.impl
+package com.game.chase.data.game.impl
 
-import com.game.chase.data.db.GameRepository
-import com.game.chase.data.db.ScoreDao
-import com.game.chase.data.entity.Score
+import com.game.chase.data.game.GameRepository
+import com.game.chase.data.game.db.ScoreDao
+import com.game.chase.data.game.db.model.Score
 import javax.inject.Inject
 import javax.inject.Singleton
 
