@@ -39,8 +39,6 @@ interface GameViewModelInterface {
 
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    private val gameRepository: DefaultGameRepository,
-    private val jokeRepository: JokeRepository,
     private val gameInteractor: GameInteractor
 ) : ViewModel(), GameViewModelInterface {
 
@@ -94,11 +92,12 @@ class GameViewModel @Inject constructor(
             } else {
                 // Player has no lives left, save the score and end the game
                 withContext(Dispatchers.IO) {
+                    // withContext changes the context of the existing coroutine; everything inside will run concurrently within that coroutine
                     saveScore(nextGameState.score)
                     getLatestScore()
+                    fetchTopScores()
                 }
                 _gameState.value = nextGameState.copy(player = oldPlayer)
-                fetchTopScores()
                 _showEndOfGameDialog.value = true
             }
         } else if (nextGameState.enemies.isEmpty()) {
@@ -164,19 +163,19 @@ class GameViewModel @Inject constructor(
 
     override fun saveScore(score: Int) {
         viewModelScope.launch {
-            gameRepository.insertScore(Score(points = score))
+            gameInteractor.insertScore(score)
         }
     }
 
     override fun fetchTopScores() {
         viewModelScope.launch {
-            (topScores as MutableLiveData).value = gameRepository.getTopScores(10)
+            (topScores as MutableLiveData).value = gameInteractor.getTopScores(10)
         }
     }
 
     override fun getLatestScore() {
         viewModelScope.launch {
-            _latestScore.value = gameRepository.getLatestScore()
+            _latestScore.value = gameInteractor.getLatestScore()
         }
     }
 
@@ -187,7 +186,7 @@ class GameViewModel @Inject constructor(
     override fun fetchJoke() {
         viewModelScope.launch {
             val joke = withContext(Dispatchers.IO) {
-                jokeRepository.getRandomJoke()
+                gameInteractor.fetchJoke()
             }
             _joke.value = joke
         }

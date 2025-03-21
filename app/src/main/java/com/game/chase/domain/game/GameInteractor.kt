@@ -4,9 +4,12 @@ import com.game.chase.core.constants.Direction
 import com.game.chase.core.constants.GRID_HEIGHT
 import com.game.chase.core.constants.GRID_WIDTH
 import com.game.chase.data.db.GameRepository
+import com.game.chase.data.db.JokeRepository
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
 import com.game.chase.data.entity.Enemy
+import com.game.chase.data.entity.Joke
+import com.game.chase.data.entity.Score
 import com.game.chase.domain.game.util.PositionGenerator
 import kotlinx.coroutines.CoroutineScope
 import java.util.Random
@@ -19,8 +22,10 @@ import kotlin.math.abs
 import kotlin.math.ceil
 
 class GameInteractor @Inject constructor(
-    private val positionGenerator: PositionGenerator)
-     {
+    private val positionGenerator: PositionGenerator,
+    private val gameRepository: GameRepository,
+    private val jokeRepository: JokeRepository
+) {
 
     private val updateScope = CoroutineScope(Dispatchers.Default)
      fun destroy() {
@@ -188,5 +193,21 @@ class GameInteractor @Inject constructor(
 
      fun isWithinRadius(radius: Int, pos1: Position, pos2: Position): Boolean {
         return abs(pos1.x - pos2.x) <= radius && abs(pos1.y - pos2.y) <= radius
+    }
+
+    suspend fun fetchJoke(): Joke {
+        return jokeRepository.getRandomJoke()
+    }
+
+    suspend fun insertScore(points: Int) {
+        return gameRepository.insertScore(Score(points = points))
+    }
+
+    suspend fun getTopScores(limit: Int): List<Score> {
+        return gameRepository.getTopScores(limit)
+    }
+
+    suspend fun getLatestScore(): Score? {
+        return gameRepository.getLatestScore()
     }
 }
