@@ -5,7 +5,9 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.game.chase.data.entity.Score
+import com.game.chase.data.game.db.model.Score
+import com.game.chase.data.game.db.GameDatabase
+import com.game.chase.data.game.db.ScoreDao
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals

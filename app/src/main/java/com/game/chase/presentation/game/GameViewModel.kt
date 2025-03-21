@@ -5,17 +5,19 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.chase.core.constants.Direction
-import com.game.chase.data.db.impl.DefaultGameRepository
 import com.game.chase.data.entity.Enemy
+import com.game.chase.data.joke.Joke
 import com.game.chase.data.entity.Player
 import com.game.chase.data.entity.Position
-import com.game.chase.data.entity.Score
+import com.game.chase.data.game.db.model.Score
 import com.game.chase.domain.game.GameState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.game.chase.domain.game.GameInteractor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 
 interface GameViewModelInterface {
@@ -28,12 +30,13 @@ interface GameViewModelInterface {
     fun startNewGame()
     fun saveScore(score: Int)
     fun fetchTopScores()
+    fun getLatestScore()
     fun dismissEndOfGameDialog()
+    fun fetchJoke()
 }
 
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    private val gameRepository: DefaultGameRepository,
     private val gameInteractor: GameInteractor
 ) : ViewModel(), GameViewModelInterface {
 
@@ -42,6 +45,11 @@ class GameViewModel @Inject constructor(
     override val topScores: LiveData<List<Score>> = MutableLiveData()
     private val _showEndOfGameDialog = MutableLiveData<Boolean>()
     override val showEndOfGameDialog: LiveData<Boolean> = _showEndOfGameDialog
+
+    private val _joke = MutableStateFlow<Joke?>(null)
+    val joke: StateFlow<Joke?> = _joke
+    private val _latestScore = MutableStateFlow<Score?>(null)
+    val latestScore: StateFlow<Score?> = _latestScore
 
     init {
         startNewGame()
@@ -81,9 +89,13 @@ class GameViewModel @Inject constructor(
                 _gameState.value = newState
             } else {
                 // Player has no lives left, save the score and end the game
-                withContext(Dispatchers.IO) { gameRepository.insertScore(Score(points = nextGameState.score)) }
+                withContext(Dispatchers.IO) {
+                    // withContext changes the context of the existing coroutine; everything inside will run concurrently within that coroutine
+                    saveScore(nextGameState.score)
+                    getLatestScore()
+                    fetchTopScores()
+                }
                 _gameState.value = nextGameState.copy(player = oldPlayer)
-                fetchTopScores()
                 _showEndOfGameDialog.value = true
             }
         } else if (nextGameState.enemies.isEmpty()) {
@@ -118,36 +130,64 @@ class GameViewModel @Inject constructor(
 
     override fun teleportPlayer() {
         viewModelScope.launch {
-            val newGameState = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
-            processGameState(newGameState)
+            val oldGameState = _gameState.value ?: return@launch
+
+            // Only update enemies if the player's position has changed
+            if (oldGameState.player.teleportUses > 0) {
+                val newGameState = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
+                processGameState(newGameState)
+            }
         }
     }
 
     override fun useBomb() {
         viewModelScope.launch {
-            val newGameState = gameInteractor.useBomb(_gameState.value ?: return@launch)
-            processGameState(newGameState)
+            val oldGameState = _gameState.value ?: return@launch
+
+            // Only update enemies if the player's position has changed
+            if (oldGameState.player.bombUses > 0) {
+                val newGameState = gameInteractor.useBomb(_gameState.value ?: return@launch)
+                processGameState(newGameState)
+            }
         }
     }
 
     override fun startNewGame() {
         _gameState.value = gameInteractor.startNewGame()
+        viewModelScope.launch {
+            fetchJoke()
+        }
     }
 
     override fun saveScore(score: Int) {
         viewModelScope.launch {
-            gameRepository.insertScore(Score(points = score))
+            gameInteractor.insertScore(score)
         }
     }
 
     override fun fetchTopScores() {
         viewModelScope.launch {
-            (topScores as MutableLiveData).value = gameRepository.getTopScores(10)
+            (topScores as MutableLiveData).value = gameInteractor.getTopScores(10)
+        }
+    }
+
+    override fun getLatestScore() {
+        viewModelScope.launch {
+            _latestScore.value = gameInteractor.getLatestScore()
         }
     }
 
     override fun dismissEndOfGameDialog() {
         _showEndOfGameDialog.value = false // Implement the function here
+    }
+
+    override fun fetchJoke() {
+        viewModelScope.launch {
+            val joke = withContext(Dispatchers.IO) {
+                gameInteractor.fetchJoke()
+            }
+            _joke.value = joke
+        }
     }
 }
 
@@ -198,7 +238,15 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
         // Mock implementation
     }
 
+    override fun getLatestScore() {
+        // Mock implementation
+    }
+
     override fun dismissEndOfGameDialog() {
+        // Mock implementation
+    }
+
+    override fun fetchJoke() {
         // Mock implementation
     }
 }
