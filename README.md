@@ -1,6 +1,43 @@
 
 ### Overview
 This lightweight app serves as a testing ground for experimenting with new Android framework features. As a result, some suboptimal components or code structures may be intentionally used for exploration, and certain shortcuts may be taken since this is not intended for production.
+
+----------------
+### Project Structure: MVVM with some Clean Architecture Principles
+- Top-level packages for each layer (code, data, domain, presentation) with feature sub-packages.
+
+App
+├── core (Provides the foundation & utilities)
+│   ├── constants
+│   ├── platform (future: to hold platform-logic concrete implementations like camera, shared prefs, etc.)
+│   └── di
+├── data (Data storage & retrieval)
+│   ├── feature
+│   │   ├── api
+│   │   │   └── model
+│   │   ├── db
+│   │   │   └── model
+│   │   ├── util (repository)
+│   │   │   └── mapper (between api/db/domain models, etc.)
+│   │   ├── impl (repository)
+│   │   └── Repository (interface)
+│   └── ... (More features)
+├── domain (Business logic & core concepts)
+│   ├── feature
+│   │   │   └── model (holds interfaces for data models to implement)
+│   │   ├── Interactor(s) or UseCase(s)
+│   │   └── util
+│   └── ... (More features)
+└── presentation (Displays data to the user & handles user interactions)
+    ├── feature1
+    │   ├── compose
+    │   │   └── ComposeFunctions
+    │   ├── ViewModel
+    │   └── UiState ([TODO] encapsulate state in the ViewModel)
+    └── ... (More features)
+
+----------------
+
 ### Background
 The game is inspired by a mini-game based on the classic "Daleks" game. The objective is to destroy Enemies by making them collide with each other or using bombs. Daleks move towards the player every turn, and the player can move, teleport, or use bombs to avoid and destroy Daleks.
 
