@@ -6,36 +6,37 @@ This lightweight app serves as a testing ground for experimenting with new Andro
 ### Project Structure: MVVM with some Clean Architecture Principles
 - Top-level packages for each layer (code, data, domain, presentation) with feature sub-packages.
 
-App
-├── core (Provides the foundation & utilities)
-│   ├── constants
-│   ├── platform (future: to hold platform-logic concrete implementations like camera, shared prefs, etc.)
-│   └── di
-├── data (Data storage & retrieval)
-│   ├── feature
-│   │   ├── api
-│   │   │   └── model
-│   │   ├── db
-│   │   │   └── model
-│   │   ├── util (repository)
-│   │   │   └── mapper (between api/db/domain models, etc.)
-│   │   ├── impl (repository)
-│   │   └── Repository (interface)
-│   └── ... (More features)
-├── domain (Business logic & core concepts)
-│   ├── feature
-│   │   │   └── model (holds interfaces for data models to implement)
-│   │   ├── Interactor(s) or UseCase(s)
-│   │   └── util
-│   └── ... (More features)
-└── presentation (Displays data to the user & handles user interactions)
-    ├── feature1
-    │   ├── compose
-    │   │   └── ComposeFunctions
-    │   ├── ViewModel
-    │   └── UiState ([TODO] encapsulate state in the ViewModel)
-    └── ... (More features)
 
+App
+- core (Provides the foundation & utilities)
+  - constants
+  - platform (future: to hold platform-logic concrete implementations like camera, shared prefs, etc.)
+  - di
+- data (Data storage & retrieval)
+  - feature
+    - api
+      - model
+    - db
+      - model
+    - util (repository)
+      - mapper (between api/db/domain models, etc.)
+    - impl (repository)
+    - Repository (interface)
+  - ... (More features)
+- domain (Business logic & core concepts)
+  - feature
+    - model (holds interfaces for data models to implement)
+    - Interactor(s) or UseCase(s)
+    - util
+  - ... (More features)
+- presentation (Displays data to the user & handles user interactions)
+  - feature1
+    - compose
+      - ComposeFunctions
+    - ViewModel
+    - UiState ([TODO] encapsulate state in the ViewModel)
+  - ... (More features)
+    
 ----------------
 
 ### Background
