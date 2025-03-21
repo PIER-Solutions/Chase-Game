@@ -8,7 +8,7 @@ Inspiration:
 - https://furfighters.fandom.com/wiki/Bear_Attack
 - https://www.isaacsukin.com/sites/daleks/index.html
 
-
+![Screenshot 2025-03-20 at 11 15 29 AM](https://github.com/user-attachments/assets/8d649891-fb87-44bb-a0cf-552d049805ae)
 
 #### Gameplay:
 - **Grid-Based Gameplay:**
@@ -52,6 +52,8 @@ Inspiration:
 ### Game theme link:
 http://material-foundation.github.io?primary=%23C5B6A1&bodyFont=Acme&displayFont=Acme&colorMatch=true
 ----------------
+
+![Screenshot 2025-03-20 at 11 15 15 AM](https://github.com/user-attachments/assets/a3664694-c5c5-4229-b68e-7980ec158a5b)
 
 -----
 
