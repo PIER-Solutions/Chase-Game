@@ -1,0 +1,7 @@
+Things to do in the app:
+- Unit tests for UI, ViewModel, Repositories
+- Add in a logging wrapper and some useful logging calls
+- Break GameInteractor into smaller classes
+- Move game logic from interactor into a pure game logic class (com.game.chase.domain.logic.newClass)? Seems excessive for this right now
+- Add interfaces for data access
+- Add persistence for game state so you can exit & reload from where you left off if the game dies

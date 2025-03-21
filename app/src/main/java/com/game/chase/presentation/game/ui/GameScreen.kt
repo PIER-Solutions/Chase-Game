@@ -1,6 +1,5 @@
-package com.game.chase.presentation.game
+package com.game.chase.presentation.game.ui
 
-import GameGrid
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
@@ -19,6 +18,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
+import com.game.chase.presentation.game.GameViewModel
+import com.game.chase.presentation.game.GameViewModelInterface
+import com.game.chase.presentation.game.MockGameViewModel
 
 
 @Composable

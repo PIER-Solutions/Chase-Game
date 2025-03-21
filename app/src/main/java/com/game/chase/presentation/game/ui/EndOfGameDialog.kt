@@ -1,4 +1,4 @@
-package com.game.chase.presentation.game
+package com.game.chase.presentation.game.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
