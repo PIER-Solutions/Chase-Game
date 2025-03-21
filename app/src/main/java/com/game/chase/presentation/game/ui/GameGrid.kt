@@ -1,3 +1,5 @@
+package com.game.chase.presentation.game.ui
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -15,14 +17,12 @@ import com.game.chase.data.entity.Position
 import com.game.chase.domain.game.GameState
 
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.MutableLiveData
 import com.game.chase.ui.theme.*
 import android.content.res.Configuration
 import com.game.chase.core.constants.GRID_HEIGHT
 import com.game.chase.core.constants.GRID_WIDTH
 import com.game.chase.presentation.game.MockGameViewModel
 import kotlin.math.abs
-import kotlin.math.ceil
 
 @Preview(
     showBackground = false,
