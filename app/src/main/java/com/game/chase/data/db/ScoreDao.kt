@@ -17,5 +17,8 @@ interface ScoreDao {
 
     @Query("SELECT * FROM scores ORDER BY points DESC")
     fun getAllScores(): LiveData<List<Score>>
+
+    @Query("SELECT * FROM scores ORDER BY date DESC LIMIT 1")
+    suspend fun getLatestScore(): Score?
 }
 

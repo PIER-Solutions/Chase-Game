@@ -14,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,7 +23,7 @@ import com.game.chase.data.entity.Score
 
 @Composable
 fun EndOfGameDialog(
-    score: String,
+    gameScore: Score?,
     topScores: List<Score>,
     joke: Joke?,
     onDismiss: () -> Unit
@@ -36,7 +37,7 @@ fun EndOfGameDialog(
                     Text("Your Score: ")
                 }
                 Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    Text(score)
+                    Text(gameScore?.points.toString())
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
@@ -46,20 +47,24 @@ fun EndOfGameDialog(
                 }
                 LazyColumn {
                     items(topScores) { score ->
-                        ScoreItem(score = score)
+                        ScoreItem(score = score, isCurrentScore = gameScore?.id == score.id)
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(8.dp))
                 if (joke != null) {
                     Text(
-                        "Here's a joke for you:",
+                        "Here's a joke to make you feel better:",
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         joke.setup,
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         joke.punchline,
@@ -71,7 +76,7 @@ fun EndOfGameDialog(
         },
         confirmButton = {
             Button(onClick = onDismiss) {
-                Text("OK")
+                Text("New Game")
             }
         }
     )
@@ -81,21 +86,21 @@ fun EndOfGameDialog(
 @Composable
 fun EndOfGameDialogPreview() {
     val topScores = listOf(
-        Score(points = 1000, date = System.currentTimeMillis()),
-        Score(points = 900, date = System.currentTimeMillis()),
-        Score(points = 800, date = System.currentTimeMillis()),
-        Score(points = 700, date = System.currentTimeMillis()),
-        Score(points = 600, date = System.currentTimeMillis()),
-        Score(points = 500, date = System.currentTimeMillis()),
-        Score(points = 400, date = System.currentTimeMillis()),
-        Score(points = 300, date = System.currentTimeMillis()),
-        Score(points = 200, date = System.currentTimeMillis()),
-        Score(points = 100, date = System.currentTimeMillis()),
+        Score(points = 1000, date = System.currentTimeMillis(), id = 1),
+        Score(points = 900, date = System.currentTimeMillis(), id = 2),
+        Score(points = 800, date = System.currentTimeMillis(), id = 10),
+        Score(points = 700, date = System.currentTimeMillis(), id = 3),
+        Score(points = 600, date = System.currentTimeMillis(), id = 4),
+        Score(points = 500, date = System.currentTimeMillis(), id = 5),
+        Score(points = 400, date = System.currentTimeMillis(), id = 6),
+        Score(points = 300, date = System.currentTimeMillis(), id = 7),
+        Score(points = 200, date = System.currentTimeMillis(), id = 8),
+        Score(points = 100, date = System.currentTimeMillis(), id = 9),
     )
     EndOfGameDialog(
-        score = "12345",
+        gameScore = Score(points = 800, id = 10),
         topScores = topScores,
-        joke = Joke("setup", "setup", "punchline"),
+        joke = Joke("setup", "Do you want a brief explanation of what an acorn is?", "In a nutshell, it's an oak tree."),
         onDismiss = {} // Dummy implementation
     )
 }

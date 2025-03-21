@@ -32,6 +32,7 @@ interface GameViewModelInterface {
     fun startNewGame()
     fun saveScore(score: Int)
     fun fetchTopScores()
+    fun getLatestScore()
     fun dismissEndOfGameDialog()
     fun fetchJoke()
 }
@@ -51,6 +52,8 @@ class GameViewModel @Inject constructor(
 
     private val _joke = MutableStateFlow<Joke?>(null)
     val joke: StateFlow<Joke?> = _joke
+    private val _latestScore = MutableStateFlow<Score?>(null)
+    val latestScore: StateFlow<Score?> = _latestScore
 
     init {
         startNewGame()
@@ -90,7 +93,10 @@ class GameViewModel @Inject constructor(
                 _gameState.value = newState
             } else {
                 // Player has no lives left, save the score and end the game
-                withContext(Dispatchers.IO) { gameRepository.insertScore(Score(points = nextGameState.score)) }
+                withContext(Dispatchers.IO) {
+                    saveScore(nextGameState.score)
+                    getLatestScore()
+                }
                 _gameState.value = nextGameState.copy(player = oldPlayer)
                 fetchTopScores()
                 _showEndOfGameDialog.value = true
@@ -168,6 +174,12 @@ class GameViewModel @Inject constructor(
         }
     }
 
+    override fun getLatestScore() {
+        viewModelScope.launch {
+            _latestScore.value = gameRepository.getLatestScore()
+        }
+    }
+
     override fun dismissEndOfGameDialog() {
         _showEndOfGameDialog.value = false // Implement the function here
     }
@@ -226,6 +238,10 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
     }
 
     override fun fetchTopScores() {
+        // Mock implementation
+    }
+
+    override fun getLatestScore() {
         // Mock implementation
     }
 

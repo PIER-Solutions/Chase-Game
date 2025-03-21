@@ -19,10 +19,9 @@ class DefaultGameRepository @Inject constructor(
         return scoreDao.getTopScores(limit)
     }
 
-    fun getAllScores(): LiveData<List<Score>> {
-        return scoreDao.getAllScores()
+    override suspend fun getLatestScore(): Score? {
+        return scoreDao.getLatestScore()
     }
-
 }
 
 

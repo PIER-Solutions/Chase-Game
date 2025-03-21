@@ -17,14 +17,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import com.game.chase.domain.game.GameState
+
 
 @Composable
 fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, viewModel: GameViewModelInterface = hiltViewModel<GameViewModel>()) {
@@ -36,6 +31,7 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
 
         // Observe StateFlow from the ViewModel
         val joke = (viewModel as GameViewModel).joke.collectAsState().value
+        val latestScore = (viewModel).latestScore.collectAsState().value
 
         // Call destroy method of GameInteractor when GameScreen leaves the composition
         DisposableEffect(key1 = viewModel) {
@@ -46,7 +42,7 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
 
         if (showEndOfGameDialog.value == true) {
             EndOfGameDialog(
-                score = gameState?.score?.toString() ?: "",
+                gameScore = latestScore,
                 topScores = topScores.value ?: emptyList(),
                 joke = joke,
                 onDismiss = {
