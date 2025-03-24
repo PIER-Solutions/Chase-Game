@@ -10,6 +10,10 @@ android {
     namespace = "com.game.chase"
     compileSdk = 35
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.game.chase"
         minSdk = 29

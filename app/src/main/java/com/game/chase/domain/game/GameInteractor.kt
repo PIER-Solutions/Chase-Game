@@ -1,8 +1,10 @@
 package com.game.chase.domain.game
 
+import android.util.Log
 import com.game.chase.core.constants.Direction
 import com.game.chase.core.constants.GRID_HEIGHT
 import com.game.chase.core.constants.GRID_WIDTH
+import com.game.chase.core.util.LogX
 import com.game.chase.data.game.GameRepository
 import com.game.chase.data.joke.JokeRepository
 import com.game.chase.data.entity.Player
@@ -33,6 +35,7 @@ class GameInteractor @Inject constructor(
      }
 
     fun movePlayer(gameState: GameState, direction: Direction): GameState {
+        LogX.log(Log.DEBUG, TAG, "direction: $direction")
         val oldPlayer = gameState.player
         val newPosition = when (direction) {
             Direction.UP -> Position(oldPlayer.position.x, (oldPlayer.position.y - 1))
@@ -209,5 +212,9 @@ class GameInteractor @Inject constructor(
 
     suspend fun getLatestScore(): Score? {
         return gameRepository.getLatestScore()
+    }
+
+    companion object {
+        private const val TAG = "GAME_LOGIC"
     }
 }
