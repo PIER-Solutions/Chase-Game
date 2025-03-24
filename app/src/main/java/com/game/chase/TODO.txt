@@ -2,7 +2,7 @@ Things to do in the app:
 
 Top Priority:
 - Replace LiveData with Flows
-- Add interfaces for data access
+- Add interfaces for data access, sort out the domain layer & data layer entities better
 - Unit tests for UI, ViewModel, Repositories
 
 Second Priority:
