@@ -1,7 +1,11 @@
 Things to do in the app:
+
+Top Priority:
+- Replace LiveData with Flows
+- Add interfaces for data access
 - Unit tests for UI, ViewModel, Repositories
-- Add in a logging wrapper and some useful logging calls
+
+Second Priority:
 - Break GameInteractor into smaller classes
 - Move game logic from interactor into a pure game logic class (com.game.chase.domain.logic.newClass)? Seems excessive for this right now
-- Add interfaces for data access
 - Add persistence for game state so you can exit & reload from where you left off if the game dies
