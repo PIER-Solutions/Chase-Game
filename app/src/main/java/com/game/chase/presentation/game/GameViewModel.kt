@@ -1,10 +1,9 @@
 package com.game.chase.presentation.game
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.chase.core.constants.Direction
-import com.game.chase.core.util.log.impl.DefaultLogX
+import com.game.chase.core.util.log.LogX
 import com.game.chase.data.entity.Enemy
 import com.game.chase.data.joke.Joke
 import com.game.chase.data.entity.Player
@@ -39,7 +38,6 @@ interface GameViewModelInterface {
 
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    private val logX: DefaultLogX,
     private val gameInteractor: GameInteractor
 ) : ViewModel(), GameViewModelInterface {
 
@@ -84,7 +82,7 @@ class GameViewModel @Inject constructor(
             val oldPlayer = nextGameState.player
             oldPlayer.lives--
             if (oldPlayer.lives > 0) {
-                logX.log(Log.DEBUG, TAG, "Player Died; ${oldPlayer.lives} lives remaining")
+                LogX.d(TAG, "Player Died; ${oldPlayer.lives} lives remaining")
                 // decrement a life and reset the level
                 val newPlayerPosition = gameInteractor.getPlayerStartPosition()
                 val newState = GameState(
@@ -97,7 +95,7 @@ class GameViewModel @Inject constructor(
                 _gameState.update { newState }
             } else {
                 // Player has no lives left, save the score and end the game
-                logX.log(Log.DEBUG, TAG, "Player Died. Game Over")
+                LogX.d(TAG, "Player Died. Game Over")
                 withContext(Dispatchers.IO) {
                     // withContext changes the context of the existing coroutine; everything inside will run concurrently within that coroutine
                     saveScore(nextGameState.score)
@@ -105,7 +103,7 @@ class GameViewModel @Inject constructor(
                     fetchTopScores()
                     _gameState.update { nextGameState.copy(player = oldPlayer) }
                     _showEndOfGameDialog.update { true }
-                    logX.log(Log.DEBUG, TAG, "GameState: ${_gameState}")
+                    LogX.d(TAG, "GameState: $_gameState")
                 }
             }
         } else if (nextGameState.enemies.isEmpty()) {
@@ -131,7 +129,7 @@ class GameViewModel @Inject constructor(
                 // Only update enemies if the player's position has changed
                 if (oldGameState.player.position != newGameState.player.position) {
                     viewModelScope.launch {
-                        logX.log(Log.DEBUG, TAG, "Player Moved; Updating game state")
+                        LogX.d(TAG, "Player Moved; Updating game state")
                         processGameState(newGameState)
                     }
                 }
@@ -147,7 +145,7 @@ class GameViewModel @Inject constructor(
                 if (oldGameState.player.teleportUses > 0) {
                     val newGameState = gameInteractor.teleportPlayer(oldGameState)
                     viewModelScope.launch {
-                        logX.log(Log.DEBUG, TAG, "Teleport Used; Updating game state")
+                        LogX.d(TAG, "Teleport Used; Updating game state")
                         processGameState(newGameState)
                     }
                 }
@@ -163,7 +161,7 @@ class GameViewModel @Inject constructor(
                 if (oldGameState.player.bombUses > 0) {
                     val newGameState = gameInteractor.useBomb(oldGameState)
                     viewModelScope.launch {
-                        logX.log(Log.DEBUG, TAG, "Bomb used; Updating Game state")
+                        LogX.d(TAG, "Bomb used; Updating Game state")
                         processGameState(newGameState)
                     }
                 }
@@ -175,7 +173,7 @@ class GameViewModel @Inject constructor(
     override fun startNewGame() {
         _gameState.update { gameInteractor.startNewGame() }
         viewModelScope.launch {
-            logX.log(Log.DEBUG, TAG, "Fetching new Joke")
+            LogX.d(TAG, "Fetching new Joke")
             fetchJoke()
         }
     }
@@ -196,7 +194,7 @@ class GameViewModel @Inject constructor(
         viewModelScope.launch {
             _latestScore.update {
                 val score = gameInteractor.getLatestScore()
-                logX.log(Log.DEBUG, TAG, "Latest Score Retrieved: $score")
+                LogX.d(TAG, "Latest Score Retrieved: $score")
                 score
             }
         }
@@ -204,7 +202,7 @@ class GameViewModel @Inject constructor(
 
     override fun dismissEndOfGameDialog() {
         _showEndOfGameDialog.update {
-            logX.log(Log.DEBUG, TAG, "End of Game dialog Dismissed")
+            LogX.d(TAG, "End of Game dialog Dismissed")
             false
         }
     }
@@ -215,7 +213,7 @@ class GameViewModel @Inject constructor(
                 gameInteractor.fetchJoke()
             }
             _joke.update {
-                logX.log(Log.DEBUG, TAG, "New Joke: $joke")
+                LogX.d(TAG, "New Joke: $joke")
                 joke
             }
         }

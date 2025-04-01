@@ -3,13 +3,13 @@ package com.game.chase.core.util.log.impl
 import android.util.Log
 
 import com.game.chase.BuildConfig
-import com.game.chase.core.util.log.LogX
+import com.game.chase.core.util.log.LogWrapper
 //import com.google.firebase.crashlytics.FirebaseCrashlytics
 import retrofit2.Call
 import javax.inject.Inject
 
 
-class DefaultLogXBac  @Inject constructor() : LogX {
+class DefaultLogWrapperBac  @Inject constructor() : LogWrapper {
 
     private fun findRelevantStackTraceElement(): StackTraceElement? {
         val stack = Thread.currentThread().stackTrace

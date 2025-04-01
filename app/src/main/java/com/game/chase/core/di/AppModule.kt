@@ -3,8 +3,8 @@ package com.game.chase.core.di
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
-import com.game.chase.core.util.log.LogX
-import com.game.chase.core.util.log.impl.DefaultLogX
+import com.game.chase.core.util.log.LogWrapper
+import com.game.chase.core.util.log.impl.AndroidLogWrapper
 import com.game.chase.data.game.db.GameDatabase
 import com.game.chase.data.game.GameRepository
 import com.game.chase.data.joke.api.JokeApi
@@ -61,8 +61,8 @@ abstract class AppModule {
 
         @Provides
         @Singleton
-        fun provideLogWrapper(): LogX { // Provide LogWrapper
-            return DefaultLogX()
+        fun provideLogWrapper(): LogWrapper {
+            return AndroidLogWrapper() // internal is fine here!
         }
 
         @Provides

@@ -1,6 +1,5 @@
 package com.game.chase.domain.game
 
-import android.util.Log
 import com.game.chase.core.constants.Direction
 import com.game.chase.core.constants.GRID_HEIGHT
 import com.game.chase.core.constants.GRID_WIDTH
@@ -24,7 +23,6 @@ import kotlin.math.abs
 import kotlin.math.ceil
 
 class GameInteractor @Inject constructor(
-    private val logX: LogX,
     private val positionGenerator: PositionGenerator,
     private val gameRepository: GameRepository,
     private val jokeRepository: JokeRepository
@@ -36,7 +34,7 @@ class GameInteractor @Inject constructor(
      }
 
     fun movePlayer(gameState: GameState, direction: Direction): GameState {
-        logX.log(Log.DEBUG, TAG, "direction: $direction")
+        LogX.d(TAG, "direction: $direction")
         val oldPlayer = gameState.player
         val newPosition = when (direction) {
             Direction.UP -> Position(oldPlayer.position.x, (oldPlayer.position.y - 1))
