@@ -35,12 +35,12 @@ object LogX {
  *      logX.d("My message")
  *      logX.e("My error message", Throwable())
  */
-    fun v(msg: String, tag: String = "App") = internalDelegate.log(Log.VERBOSE, tag, msg)
-    fun d(msg: String, tag: String = "App") = internalDelegate.log(Log.DEBUG, tag, msg)
-    fun i(msg: String, tag: String = "App") = internalDelegate.log(Log.INFO, tag, msg)
-    fun w(msg: String, tag: String = "App") = internalDelegate.log(Log.WARN, tag, msg)
-    fun e(msg: String, tag: String = "App") = internalDelegate.log(Log.ERROR, tag, msg)
-    fun e(msg: String, t: Throwable, tag: String = "App") = internalDelegate.log(Log.ERROR, tag, msg, t)
+    fun v(tag: String = "App", msg: String) = internalDelegate.log(Log.VERBOSE, tag, msg)
+    fun d(tag: String = "App", msg: String) = internalDelegate.log(Log.DEBUG, tag, msg)
+    fun i(tag: String = "App", msg: String) = internalDelegate.log(Log.INFO, tag, msg)
+    fun w(tag: String = "App", msg: String) = internalDelegate.log(Log.WARN, tag, msg)
+    fun e(tag: String = "App", msg: String) = internalDelegate.log(Log.ERROR, tag, msg)
+    fun e(tag: String = "App", msg: String, t: Throwable) = internalDelegate.log(Log.ERROR, tag, msg, t)
 
     /* Exceptions
      *
@@ -84,7 +84,7 @@ object LogX {
     /* Assertion
      *
      * Usage:
-     *      log.xassert(false, "Assertion failed")
+     *      logX.assert(false, "Assertion failed")
      */
     fun shouldNotReach(reason: String) = internalDelegate.safeAssertShouldNotReachHere(reason)
 }
