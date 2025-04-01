@@ -1,10 +1,10 @@
 package com.game.chase.presentation.game
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.game.chase.core.constants.Direction
+import com.game.chase.core.util.log.impl.DefaultLogX
 import com.game.chase.data.entity.Enemy
 import com.game.chase.data.joke.Joke
 import com.game.chase.data.entity.Player
@@ -18,12 +18,14 @@ import com.game.chase.domain.game.GameInteractor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
 interface GameViewModelInterface {
-    val gameState: LiveData<GameState>
-    val topScores: LiveData<List<Score>>
-    val showEndOfGameDialog: LiveData<Boolean>
+    val gameState: StateFlow<GameState>
+    val topScores: StateFlow<List<Score>>
+    val showEndOfGameDialog: StateFlow<Boolean>
     fun movePlayer(direction: Direction)
     fun teleportPlayer()
     fun useBomb()
@@ -37,17 +39,22 @@ interface GameViewModelInterface {
 
 @HiltViewModel
 class GameViewModel @Inject constructor(
+    private val logX: DefaultLogX,
     private val gameInteractor: GameInteractor
 ) : ViewModel(), GameViewModelInterface {
 
-    private val _gameState = MutableLiveData<GameState>()
-    override val gameState: LiveData<GameState> = _gameState
-    override val topScores: LiveData<List<Score>> = MutableLiveData()
-    private val _showEndOfGameDialog = MutableLiveData<Boolean>()
-    override val showEndOfGameDialog: LiveData<Boolean> = _showEndOfGameDialog
+    private val _gameState = MutableStateFlow(gameInteractor.startNewGame())
+    override val gameState: StateFlow<GameState> = _gameState.asStateFlow()
+
+    private val _topScores = MutableStateFlow<List<Score>>(emptyList())
+    override val topScores: StateFlow<List<Score>> = _topScores.asStateFlow()
+
+    private val _showEndOfGameDialog = MutableStateFlow(false)
+    override val showEndOfGameDialog: StateFlow<Boolean> = _showEndOfGameDialog
 
     private val _joke = MutableStateFlow<Joke?>(null)
     val joke: StateFlow<Joke?> = _joke
+
     private val _latestScore = MutableStateFlow<Score?>(null)
     val latestScore: StateFlow<Score?> = _latestScore
 
@@ -77,6 +84,7 @@ class GameViewModel @Inject constructor(
             val oldPlayer = nextGameState.player
             oldPlayer.lives--
             if (oldPlayer.lives > 0) {
+                logX.log(Log.DEBUG, TAG, "Player Died; ${oldPlayer.lives} lives remaining")
                 // decrement a life and reset the level
                 val newPlayerPosition = gameInteractor.getPlayerStartPosition()
                 val newState = GameState(
@@ -86,17 +94,19 @@ class GameViewModel @Inject constructor(
                     score = nextGameState.score,
                     level = nextGameState.level
                 )
-                _gameState.value = newState
+                _gameState.update { newState }
             } else {
                 // Player has no lives left, save the score and end the game
+                logX.log(Log.DEBUG, TAG, "Player Died. Game Over")
                 withContext(Dispatchers.IO) {
                     // withContext changes the context of the existing coroutine; everything inside will run concurrently within that coroutine
                     saveScore(nextGameState.score)
                     getLatestScore()
                     fetchTopScores()
+                    _gameState.update { nextGameState.copy(player = oldPlayer) }
+                    _showEndOfGameDialog.update { true }
+                    logX.log(Log.DEBUG, TAG, "GameState: ${_gameState}")
                 }
-                _gameState.value = nextGameState.copy(player = oldPlayer)
-                _showEndOfGameDialog.value = true
             }
         } else if (nextGameState.enemies.isEmpty()) {
             // Add bonuses
@@ -106,55 +116,66 @@ class GameViewModel @Inject constructor(
                     false -> nextGameState.player.teleportUses++
                 }
 
-            _gameState.value = gameInteractor.nextLevel(nextGameState)
+            _gameState.update { gameInteractor.nextLevel(nextGameState) }
         } else {
-            _gameState.value = nextGameState
+            _gameState.update { nextGameState }
         }
 
     }
 
     override fun movePlayer(direction: Direction) {
         viewModelScope.launch {
-            val oldGameState = _gameState.value ?: return@launch
-            val newGameState = gameInteractor.movePlayer(oldGameState, direction)
+            _gameState.update { oldGameState ->
+                val newGameState = gameInteractor.movePlayer(oldGameState, direction)
 
-            // Only update enemies if the player's position has changed
-            if (oldGameState.player.position != newGameState.player.position) {
-                processGameState(newGameState)
-            } else {
-                _gameState.value = newGameState
+                // Only update enemies if the player's position has changed
+                if (oldGameState.player.position != newGameState.player.position) {
+                    viewModelScope.launch {
+                        logX.log(Log.DEBUG, TAG, "Player Moved; Updating game state")
+                        processGameState(newGameState)
+                    }
+                }
+                newGameState
             }
-
         }
     }
 
     override fun teleportPlayer() {
         viewModelScope.launch {
-            val oldGameState = _gameState.value ?: return@launch
-
-            // Only update enemies if the player's position has changed
-            if (oldGameState.player.teleportUses > 0) {
-                val newGameState = gameInteractor.teleportPlayer(_gameState.value ?: return@launch)
-                processGameState(newGameState)
+            _gameState.update { oldGameState ->
+                // Only update enemies if the player's position has changed
+                if (oldGameState.player.teleportUses > 0) {
+                    val newGameState = gameInteractor.teleportPlayer(oldGameState)
+                    viewModelScope.launch {
+                        logX.log(Log.DEBUG, TAG, "Teleport Used; Updating game state")
+                        processGameState(newGameState)
+                    }
+                }
+                oldGameState
             }
         }
     }
 
     override fun useBomb() {
         viewModelScope.launch {
-            val oldGameState = _gameState.value ?: return@launch
-
-            // Only update enemies if the player's position has changed
-            if (oldGameState.player.bombUses > 0) {
-                val newGameState = gameInteractor.useBomb(_gameState.value ?: return@launch)
-                processGameState(newGameState)
+            _gameState.update { oldGameState ->
+                // Only update enemies if the player's position has changed
+                if (oldGameState.player.bombUses > 0) {
+                    val newGameState = gameInteractor.useBomb(oldGameState)
+                    viewModelScope.launch {
+                        logX.log(Log.DEBUG, TAG, "Bomb used; Updating Game state")
+                        processGameState(newGameState)
+                    }
+                }
+                oldGameState
             }
         }
     }
 
     override fun startNewGame() {
-        _gameState.value = gameInteractor.startNewGame()
+        _gameState.update { gameInteractor.startNewGame() }
         viewModelScope.launch {
+            logX.log(Log.DEBUG, TAG, "Fetching new Joke")
             fetchJoke()
         }
     }
@@ -167,18 +188,25 @@ class GameViewModel @Inject constructor(
 
     override fun fetchTopScores() {
         viewModelScope.launch {
-            (topScores as MutableLiveData).value = gameInteractor.getTopScores(10)
+            _topScores.update { gameInteractor.getTopScores(10) }
         }
     }
 
     override fun getLatestScore() {
         viewModelScope.launch {
-            _latestScore.value = gameInteractor.getLatestScore()
+            _latestScore.update {
+                val score = gameInteractor.getLatestScore()
+                logX.log(Log.DEBUG, TAG, "Latest Score Retrieved: $score")
+                score
+            }
         }
     }
 
     override fun dismissEndOfGameDialog() {
-        _showEndOfGameDialog.value = false // Implement the function here
+        _showEndOfGameDialog.update {
+            logX.log(Log.DEBUG, TAG, "End of Game dialog Dismissed")
+            false
+        }
     }
 
     override fun fetchJoke() {
@@ -186,14 +214,21 @@ class GameViewModel @Inject constructor(
             val joke = withContext(Dispatchers.IO) {
                 gameInteractor.fetchJoke()
             }
-            _joke.value = joke
+            _joke.update {
+                logX.log(Log.DEBUG, TAG, "New Joke: $joke")
+                joke
+            }
         }
+    }
+
+    companion object {
+        private const val TAG = "GAME_LOGIC"
     }
 }
 
 
 class MockGameViewModel : ViewModel(), GameViewModelInterface {
-    override val gameState = MutableLiveData(
+    override val gameState = MutableStateFlow(
         GameState(
             player = Player(Position(9, 9), lives = 3, teleportUses = 2, bombUses = 2),
             enemies = mutableListOf(
@@ -209,10 +244,12 @@ class MockGameViewModel : ViewModel(), GameViewModelInterface {
             level = 3
         )
     )
-    override val topScores: LiveData<List<Score>>
-        get() = MutableLiveData()
-    override val showEndOfGameDialog: LiveData<Boolean>
-        get() = MutableLiveData()
+
+    private val _topScores = MutableStateFlow<List<Score>>(emptyList())
+    override val topScores: StateFlow<List<Score>> = _topScores.asStateFlow()
+
+    private val _showEndOfGameDialog = MutableStateFlow(false)
+    override val showEndOfGameDialog: StateFlow<Boolean> = _showEndOfGameDialog.asStateFlow()
 
     override fun movePlayer(direction: Direction) {
         // Mock implementation

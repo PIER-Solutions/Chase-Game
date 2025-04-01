@@ -7,7 +7,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.game.chase.ui.theme.AppTheme
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.game.chase.presentation.game.GameViewModel
 import com.game.chase.presentation.game.GameViewModelInterface
 import com.game.chase.presentation.game.MockGameViewModel
@@ -26,10 +26,10 @@ import com.game.chase.presentation.game.MockGameViewModel
 @Composable
 fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, viewModel: GameViewModelInterface = hiltViewModel<GameViewModel>()) {
     AppTheme {
-        // Observe LiveData from the viewModel
-        val gameState = viewModel.gameState.observeAsState().value
-        val topScores = viewModel.topScores.observeAsState()
-        val showEndOfGameDialog = viewModel.showEndOfGameDialog.observeAsState()
+        // Observe StateFlows from the ViewModel
+        val gameState by viewModel.gameState.collectAsState()
+        val topScores by viewModel.topScores.collectAsState()
+        val showEndOfGameDialog by viewModel.showEndOfGameDialog.collectAsState()
 
         // Observe StateFlow from the ViewModel
         val joke = (viewModel as GameViewModel).joke.collectAsState().value
@@ -42,10 +42,10 @@ fun GameScreen(navController: NavHostController, modifier: Modifier = Modifier, 
             }
         }
 
-        if (showEndOfGameDialog.value == true) {
+        if (showEndOfGameDialog) {
             EndOfGameDialog(
                 gameScore = latestScore,
-                topScores = topScores.value ?: emptyList(),
+                topScores = topScores,
                 joke = joke,
                 onDismiss = {
                     viewModel.dismissEndOfGameDialog()
